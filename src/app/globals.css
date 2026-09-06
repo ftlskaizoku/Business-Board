@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+:root {
+  --color-cream: #FBF6EE;
+  --color-card: #FFFFFF;
+  --color-line: #E9DFCC;
+  --color-ink: #2B2013;
+  --color-muted: #8A7D65;
+  --color-ochre: #C97A2B;
+  --color-ochre-soft: #F2E2CB;
+  --color-indigo: #3F4B8C;
+  --color-indigo-soft: #E4E6F3;
+  --color-green: #3D8B5F;
+  --color-green-soft: #E4F3EA;
+  --color-red: #C24B4B;
+  --color-red-soft: #F8E6E6;
+}
+
+@theme inline {
+  --color-cream: var(--color-cream);
+  --color-card: var(--color-card);
+  --color-line: var(--color-line);
+  --color-ink: var(--color-ink);
+  --color-muted: var(--color-muted);
+  --color-ochre: var(--color-ochre);
+  --color-ochre-soft: var(--color-ochre-soft);
+  --color-indigo: var(--color-indigo);
+  --color-indigo-soft: var(--color-indigo-soft);
+  --color-green: var(--color-green);
+  --color-green-soft: var(--color-green-soft);
+  --color-red: var(--color-red);
+  --color-red-soft: var(--color-red-soft);
+  --font-display: var(--font-space-grotesk);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-plex-mono);
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans), sans-serif;
+}
+
+::selection {
+  background: var(--color-ochre-soft);
+}
+
