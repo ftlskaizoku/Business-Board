@@ -79,6 +79,8 @@ export default function AuthPage() {
             <div>
               <label className="block text-xs text-muted mb-1">Nom complet</label>
               <input
+                name="name"
+                autoComplete="name"
                 className="w-full border border-line rounded-lg px-3 py-2.5 bg-card outline-none focus:border-ochre"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
@@ -91,6 +93,8 @@ export default function AuthPage() {
             <label className="block text-xs text-muted mb-1">E-mail</label>
             <input
               type="email"
+              name="email"
+              autoComplete="email"
               className="w-full border border-line rounded-lg px-3 py-2.5 bg-card outline-none focus:border-ochre"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -102,6 +106,8 @@ export default function AuthPage() {
             <label className="block text-xs text-muted mb-1">Mot de passe</label>
             <input
               type="password"
+              name="password"
+              autoComplete={mode === "signup" ? "new-password" : "current-password"}
               className="w-full border border-line rounded-lg px-3 py-2.5 bg-card outline-none focus:border-ochre"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
