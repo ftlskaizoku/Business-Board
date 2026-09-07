@@ -1,12 +1,15 @@
 import { requireUserAndBusiness } from "@/lib/data";
 import { NICHES, nicheLabel } from "@/lib/niches";
+import { ADMIN_EMAIL } from "@/lib/admin";
+import Link from "next/link";
 import BottomNav from "@/components/BottomNav";
 import SignOutButton from "@/components/SignOutButton";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const { business } = await requireUserAndBusiness();
+  const { user, business } = await requireUserAndBusiness();
   const n = NICHES[business.niche];
   const label = nicheLabel(business.niche, business.custom_niche);
+  const isAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
   return (
     <div className="min-h-screen flex flex-col pb-16">
@@ -21,7 +24,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <p className="text-xs text-muted leading-tight">{label}</p>
             </div>
           </div>
-          <SignOutButton />
+          <div className="flex items-center gap-3">
+            {isAdmin && (
+              <Link href="/admin" className="text-xs font-medium text-indigo">
+                Admin
+              </Link>
+            )}
+            <SignOutButton />
+          </div>
         </div>
       </header>
 

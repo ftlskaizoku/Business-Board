@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/admin";
 import { NICHES, nicheLabel } from "@/lib/niches";
 import { fmt, daysAgoKey } from "@/lib/format";
 import { Card } from "@/components/ui";
+import Link from "next/link";
 import type { Business } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -39,7 +40,12 @@ export default async function AdminPage() {
 
   return (
     <div className="min-h-screen p-5 max-w-2xl mx-auto w-full">
-      <p className="text-xs uppercase tracking-widest text-muted mb-1">Admin</p>
+      <div className="flex items-center justify-between mb-1">
+        <p className="text-xs uppercase tracking-widest text-muted">Admin</p>
+        <Link href="/dashboard" className="text-xs text-indigo">
+          ← Retour à mon commerce
+        </Link>
+      </div>
       <h1 className="font-display text-2xl font-semibold mb-5">Vue d&apos;ensemble</h1>
 
       <div className="grid grid-cols-2 gap-3 mb-6">
