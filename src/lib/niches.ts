@@ -50,9 +50,22 @@ export const NICHES: Record<Niche, NicheConfig> = {
     defaultType: "products",
     allowedTypes: ["products"],
   },
+  autre: {
+    key: "autre",
+    label: "Autre",
+    icon: "✨",
+    blurb: "Vous ne vous reconnaissez pas dans la liste ?",
+    defaultType: "both",
+    allowedTypes: ["products", "services", "both"],
+  },
 };
 
-export const NICHE_ORDER: Niche[] = ["restaurant", "boutique", "salon", "prestataire", "ecommerce"];
+export const NICHE_ORDER: Niche[] = ["restaurant", "boutique", "salon", "prestataire", "ecommerce", "autre"];
+
+export function nicheLabel(niche: Niche, customNiche?: string | null) {
+  if (niche === "autre" && customNiche && customNiche.trim()) return customNiche.trim();
+  return NICHES[niche].label;
+}
 
 export function hasProducts(type: BizType) {
   return type === "products" || type === "both";

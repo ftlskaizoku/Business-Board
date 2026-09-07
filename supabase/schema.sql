@@ -193,3 +193,43 @@ create index if not exists idx_sale_items_sale on sale_items(sale_id);
 create index if not exists idx_expenses_business_date on expenses(business_id, expense_date);
 create index if not exists idx_slots_business_date on appointment_slots(business_id, slot_date);
 create index if not exists idx_customers_business on customers(business_id);
+
+-- ---------------------------------------------------------------------------
+-- migration: "autre" niche + free-text custom niche name
+-- Safe to re-run.
+-- ---------------------------------------------------------------------------
+alter table businesses add column if not exists custom_niche text;
+
+do $$
+declare
+  c record;
+begin
+  for c in
+    select conname from pg_constraint
+    where conrelid = 'businesses'::regclass
+      and contype = 'c'
+      and pg_get_constraintdef(oid) ilike '%niche%'
+  loop
+    execute format('alter table businesses drop constraint %I', c.conname);
+  end loop;
+end $$;
+
+alter table businesses add constraint businesses_niche_check
+  check (niche in ('restaurant','boutique','salon','prestataire','ecommerce','autre'));
+
+-- ---------------------------------------------------------------------------
+-- migration: single hard-coded admin account can read across all businesses
+-- Safe to re-run.
+-- ---------------------------------------------------------------------------
+create or replace function public.is_admin()
+returns boolean as $$
+  select coalesce(auth.jwt() ->> 'email', '') = 'khalifadylla@gmail.com';
+$$ language sql stable;
+
+drop policy if exists "admin reads all businesses" on businesses;
+create policy "admin reads all businesses" on businesses
+  for select using (is_admin());
+
+drop policy if exists "admin reads all sales" on sales;
+create policy "admin reads all sales" on sales
+  for select using (is_admin());

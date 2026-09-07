@@ -10,6 +10,7 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [niche, setNiche] = useState<Niche | null>(null);
+  const [customNiche, setCustomNiche] = useState("");
   const [type, setType] = useState<BizType | null>(null);
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,8 +24,10 @@ export default function OnboardingPage() {
     setType(NICHES[n].defaultType);
   }
 
+  const step1Ready = niche === "autre" ? !!niche && customNiche.trim().length > 0 : !!niche;
+
   function next() {
-    if (step === 1 && niche) setStep(needsTypeStep ? 2 : 3);
+    if (step === 1 && step1Ready) setStep(needsTypeStep ? 2 : 3);
     else if (step === 2 && type) setStep(3);
   }
   function back() {
@@ -34,6 +37,7 @@ export default function OnboardingPage() {
 
   async function createBusiness() {
     if (!niche || !type || !name.trim()) return;
+    if (niche === "autre" && !customNiche.trim()) return;
     setLoading(true);
     setError(null);
     const supabase = createClient();
@@ -49,6 +53,7 @@ export default function OnboardingPage() {
       owner_id: user.id,
       name: name.trim(),
       niche,
+      custom_niche: niche === "autre" ? customNiche.trim() : null,
       type,
       currency: "FCFA",
     });
@@ -102,9 +107,24 @@ export default function OnboardingPage() {
             })}
           </div>
 
+          {niche === "autre" && (
+            <div className="mb-8 -mt-4">
+              <label className="block text-xs uppercase tracking-widest text-muted mb-2">
+                Précisez votre activité
+              </label>
+              <input
+                autoFocus
+                className="w-full border border-line rounded-lg px-3 py-3 bg-card outline-none focus:border-ochre"
+                placeholder="Ex. Location de voitures, cordonnerie…"
+                value={customNiche}
+                onChange={(e) => setCustomNiche(e.target.value)}
+              />
+            </div>
+          )}
+
           <button
             onClick={next}
-            disabled={!niche}
+            disabled={!step1Ready}
             className="w-full bg-ochre text-white rounded-lg py-3 font-medium disabled:opacity-40"
           >
             Continuer →

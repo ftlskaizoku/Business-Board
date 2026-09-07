@@ -1,4 +1,4 @@
-export type Niche = "restaurant" | "boutique" | "salon" | "prestataire" | "ecommerce";
+export type Niche = "restaurant" | "boutique" | "salon" | "prestataire" | "ecommerce" | "autre";
 export type BizType = "products" | "services" | "both";
 
 export interface Business {
@@ -6,6 +6,7 @@ export interface Business {
   owner_id: string;
   name: string;
   niche: Niche;
+  custom_niche: string | null;
   type: BizType;
   currency: string;
   created_at: string;

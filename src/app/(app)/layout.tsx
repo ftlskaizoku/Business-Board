@@ -1,11 +1,12 @@
 import { requireUserAndBusiness } from "@/lib/data";
-import { NICHES } from "@/lib/niches";
+import { NICHES, nicheLabel } from "@/lib/niches";
 import BottomNav from "@/components/BottomNav";
 import SignOutButton from "@/components/SignOutButton";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { business } = await requireUserAndBusiness();
   const n = NICHES[business.niche];
+  const label = nicheLabel(business.niche, business.custom_niche);
 
   return (
     <div className="min-h-screen flex flex-col pb-16">
@@ -17,7 +18,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </span>
             <div>
               <p className="font-display font-semibold leading-tight">{business.name}</p>
-              <p className="text-xs text-muted leading-tight">{n.label}</p>
+              <p className="text-xs text-muted leading-tight">{label}</p>
             </div>
           </div>
           <SignOutButton />
