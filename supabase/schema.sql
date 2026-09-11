@@ -233,3 +233,60 @@ create policy "admin reads all businesses" on businesses
 drop policy if exists "admin reads all sales" on sales;
 create policy "admin reads all sales" on sales
   for select using (is_admin());
+
+-- ---------------------------------------------------------------------------
+-- migration: admin can allow/disallow individual user accounts
+-- Safe to re-run.
+-- ---------------------------------------------------------------------------
+alter table profiles add column if not exists email text;
+alter table profiles add column if not exists is_allowed boolean not null default true;
+
+-- backfill email on existing rows from auth.users
+update profiles p
+set email = u.email
+from auth.users u
+where p.id = u.id and p.email is distinct from u.email;
+
+-- keep email populated for future signups
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, full_name, email)
+  values (new.id, new.raw_user_meta_data ->> 'full_name', new.email);
+  return new;
+end;
+$$ language plpgsql security definer;
+
+-- admin can see and toggle every profile
+drop policy if exists "admin reads all profiles" on profiles;
+create policy "admin reads all profiles" on profiles
+  for select using (is_admin());
+
+drop policy if exists "admin updates all profiles" on profiles;
+create policy "admin updates all profiles" on profiles
+  for update using (is_admin());
+
+-- defense in depth: a disallowed user can't write anywhere in the app, even
+-- via a direct API call, not just when blocked by the app's own screens
+create or replace function public.owns_business(biz_id uuid)
+returns boolean as $$
+  select exists (
+    select 1 from businesses b
+    join profiles p on p.id = b.owner_id
+    where b.id = biz_id and b.owner_id = auth.uid() and p.is_allowed
+  );
+$$ language sql security definer stable;
+
+drop policy if exists "owner inserts own businesses" on businesses;
+create policy "owner inserts own businesses" on businesses
+  for insert with check (
+    auth.uid() = owner_id
+    and exists (select 1 from profiles where id = auth.uid() and is_allowed)
+  );
+
+drop policy if exists "owner updates own businesses" on businesses;
+create policy "owner updates own businesses" on businesses
+  for update using (
+    auth.uid() = owner_id
+    and exists (select 1 from profiles where id = auth.uid() and is_allowed)
+  );

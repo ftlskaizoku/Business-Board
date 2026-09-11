@@ -29,7 +29,10 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const isAuthRoute = path.startsWith("/auth");
-  const isPublicAsset = path.startsWith("/_next") || path.startsWith("/favicon");
+  // /offline is precached by the service worker at install time (while online,
+  // possibly signed out) so it must never be redirected to /auth.
+  const isPublicAsset =
+    path.startsWith("/_next") || path.startsWith("/favicon") || path === "/offline";
 
   if (!user && !isAuthRoute && !isPublicAsset) {
     const url = request.nextUrl.clone();

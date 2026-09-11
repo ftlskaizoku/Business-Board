@@ -11,8 +11,26 @@ export async function requireUser() {
   return { supabase, user };
 }
 
-export async function requireUserAndBusiness() {
+// Same as requireUser(), but also blocks accounts the admin has disallowed.
+// requireUser() itself stays "auth only" so /blocked can use it without looping.
+export async function requireAllowedUser() {
   const { supabase, user } = await requireUser();
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("is_allowed")
+    .eq("id", user.id)
+    .single();
+
+  if (profile && profile.is_allowed === false) {
+    redirect("/blocked");
+  }
+
+  return { supabase, user };
+}
+
+export async function requireUserAndBusiness() {
+  const { supabase, user } = await requireAllowedUser();
 
   const { data: businesses } = await supabase
     .from("businesses")

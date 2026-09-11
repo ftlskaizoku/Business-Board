@@ -12,6 +12,14 @@ export interface Business {
   created_at: string;
 }
 
+export interface Profile {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  is_allowed: boolean;
+  created_at: string;
+}
+
 export interface Product {
   id: string;
   business_id: string;

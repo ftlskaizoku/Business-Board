@@ -11,6 +11,9 @@ export default function SignOutButton() {
       onClick={async () => {
         const supabase = createClient();
         await supabase.auth.signOut();
+        // Drop cached page HTML so the next person on this device doesn't
+        // see this account's data while offline.
+        navigator.serviceWorker?.controller?.postMessage("CLEAR_PAGES_CACHE");
         router.push("/auth");
         router.refresh();
       }}
