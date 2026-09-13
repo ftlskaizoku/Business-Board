@@ -1,5 +1,5 @@
 import { requireUserAndBusiness } from "@/lib/data";
-import { fmt } from "@/lib/format";
+import { fmt, todayKey } from "@/lib/format";
 import { EXPENSE_CATEGORIES } from "@/lib/types";
 import { Card, EyebrowLabel, EmptyNote } from "@/components/ui";
 import { addExpense } from "../actions";
@@ -24,6 +24,17 @@ export default async function DepensesPage() {
       <Card>
         <p className="text-xs uppercase tracking-widest text-muted mb-3">Nouvelle dépense</p>
         <form action={addExpense} className="space-y-3">
+          <div>
+            <label className="block text-xs text-muted mb-1">Date</label>
+            <input
+              name="date"
+              type="date"
+              defaultValue={todayKey()}
+              max={todayKey()}
+              required
+              className="w-full border border-line rounded-lg px-3 py-2 bg-cream"
+            />
+          </div>
           <div>
             <label className="block text-xs text-muted mb-1">Catégorie</label>
             <select name="category" className="w-full border border-line rounded-lg px-3 py-2 bg-cream">

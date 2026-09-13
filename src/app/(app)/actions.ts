@@ -4,16 +4,25 @@ import { revalidatePath } from "next/cache";
 import { requireUserAndBusiness } from "@/lib/data";
 import { todayKey } from "@/lib/format";
 
+// Accepts a yyyy-mm-dd string from a <input type="date">. Falls back to
+// today if missing/malformed, and never lets a date land in the future.
+function clampToPastOrToday(raw: string) {
+  const today = todayKey();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return today;
+  return raw > today ? today : raw;
+}
+
 export async function addExpense(formData: FormData) {
   const { supabase, business } = await requireUserAndBusiness();
   const category = String(formData.get("category") || "Autre");
   const amount = Number(formData.get("amount") || 0);
   const note = String(formData.get("note") || "");
+  const expenseDate = clampToPastOrToday(String(formData.get("date") || ""));
   if (!amount) return;
 
   await supabase.from("expenses").insert({
     business_id: business.id,
-    expense_date: todayKey(),
+    expense_date: expenseDate,
     category,
     amount,
     note,
@@ -28,10 +37,20 @@ export async function addProduct(formData: FormData) {
   const name = String(formData.get("name") || "").trim();
   const category = String(formData.get("category") || "Autre").trim() || "Autre";
   const price = Number(formData.get("price") || 0);
-  const stock = Number(formData.get("stock") || 0);
+  // Stock only matters for businesses that track it (e.g. boutiques,
+  // e-commerce). A restaurant's dish isn't backed by a countable stock, so
+  // it's simply ignored (stored as 0) when tracking is off.
+  const stock = business.track_stock ? Number(formData.get("stock") || 0) : 0;
   if (!name || !price) return;
 
   await supabase.from("products").insert({ business_id: business.id, name, category, price, stock });
+  revalidatePath("/catalogue");
+  revalidatePath("/vente");
+}
+
+export async function setTrackStock(trackStock: boolean) {
+  const { supabase, business } = await requireUserAndBusiness();
+  await supabase.from("businesses").update({ track_stock: trackStock }).eq("id", business.id);
   revalidatePath("/catalogue");
   revalidatePath("/vente");
 }
@@ -81,7 +100,7 @@ export async function checkout(cart: { productId: string; qty: number }[]) {
     .map((c) => {
       const p = products.find((x) => x.id === c.productId);
       if (!p) return null;
-      return { productId: p.id, name: p.name, price: p.price, qty: c.qty, newStock: p.stock - c.qty };
+      return { productId: p.id, name: p.name, price: p.price, qty: c.qty, newStock: Math.max(0, p.stock - c.qty) };
     })
     .filter((l): l is NonNullable<typeof l> => !!l);
 
@@ -98,14 +117,47 @@ export async function checkout(cart: { productId: string; qty: number }[]) {
     lines.map((l) => ({ sale_id: sale.id, name: l.name, qty: l.qty, price: l.price }))
   );
 
-  await Promise.all(
-    lines.map((l) => supabase.from("products").update({ stock: l.newStock }).eq("id", l.productId))
-  );
+  // Only spend time updating stock for businesses that actually track it —
+  // e.g. a restaurant's dishes aren't backed by a countable stock.
+  if (business.track_stock) {
+    await Promise.all(
+      lines.map((l) => supabase.from("products").update({ stock: l.newStock }).eq("id", l.productId))
+    );
+  }
 
   revalidatePath("/vente");
   revalidatePath("/dashboard");
   revalidatePath("/stats");
   revalidatePath("/catalogue");
+}
+
+// Catch-up entry for a sale that happened on a past day the owner didn't (or
+// couldn't) record in the app at the time — no product/stock involved, just
+// a lump total against a chosen date.
+export async function addManualSale(formData: FormData) {
+  const { supabase, business } = await requireUserAndBusiness();
+  const amount = Number(formData.get("amount") || 0);
+  const note = String(formData.get("note") || "").trim();
+  const saleDate = clampToPastOrToday(String(formData.get("date") || ""));
+  if (!amount) return;
+
+  const { data: sale } = await supabase
+    .from("sales")
+    .insert({ business_id: business.id, sale_date: saleDate, total: amount })
+    .select("id")
+    .single();
+  if (!sale) return;
+
+  await supabase.from("sale_items").insert({
+    sale_id: sale.id,
+    name: note || "Vente manuelle",
+    qty: 1,
+    price: amount,
+  });
+
+  revalidatePath("/vente");
+  revalidatePath("/dashboard");
+  revalidatePath("/stats");
 }
 
 export async function bookSlot(formData: FormData) {

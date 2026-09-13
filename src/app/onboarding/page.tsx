@@ -56,6 +56,10 @@ export default function OnboardingPage() {
       custom_niche: niche === "autre" ? customNiche.trim() : null,
       type,
       currency: "FCFA",
+      // Restaurants typically don't track ingredient-level stock day to day;
+      // every other niche starts with stock tracking on. Editable later
+      // from the Catalogue tab either way.
+      track_stock: niche !== "restaurant",
     });
     setLoading(false);
     if (error) return setError(error.message);

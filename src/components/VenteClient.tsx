@@ -5,7 +5,15 @@ import { fmt } from "@/lib/format";
 import { checkout } from "@/app/(app)/actions";
 import type { Product } from "@/lib/types";
 
-export default function VenteClient({ products, currency }: { products: Product[]; currency: string }) {
+export default function VenteClient({
+  products,
+  currency,
+  trackStock,
+}: {
+  products: Product[];
+  currency: string;
+  trackStock: boolean;
+}) {
   const [cart, setCart] = useState<Record<string, number>>({});
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
@@ -20,13 +28,13 @@ export default function VenteClient({ products, currency }: { products: Product[
   function addToCart(p: Product) {
     setCart((c) => {
       const current = c[p.id] || 0;
-      if (current >= p.stock) return c;
+      if (trackStock && current >= p.stock) return c;
       return { ...c, [p.id]: current + 1 };
     });
   }
 
   function setQty(p: Product, qty: number) {
-    const clamped = Math.max(0, Math.min(qty, p.stock));
+    const clamped = trackStock ? Math.max(0, Math.min(qty, p.stock)) : Math.max(0, qty);
     setCart((c) => {
       if (clamped <= 0) {
         const next = { ...c };
@@ -77,7 +85,7 @@ export default function VenteClient({ products, currency }: { products: Product[
           <div className="grid grid-cols-2 gap-2.5">
             {g.items.map((p) => {
               const inCart = cart[p.id] || 0;
-              const disabled = inCart >= p.stock;
+              const disabled = trackStock && inCart >= p.stock;
               return (
                 <button
                   key={p.id}
@@ -164,14 +172,14 @@ export default function VenteClient({ products, currency }: { products: Product[
                       type="number"
                       inputMode="numeric"
                       min={1}
-                      max={product.stock}
+                      max={trackStock ? product.stock : undefined}
                       value={qty}
                       onChange={(e) => setQty(product, Number(e.target.value) || 0)}
                       className="w-12 text-center border border-line rounded-lg py-1 bg-cream font-mono text-sm outline-none focus:border-ochre"
                     />
                     <button
                       onClick={() => setQty(product, qty + 1)}
-                      disabled={qty >= product.stock}
+                      disabled={trackStock && qty >= product.stock}
                       className="w-8 h-8 rounded-full border border-line flex items-center justify-center text-lg leading-none disabled:opacity-30"
                       aria-label="Augmenter la quantité"
                     >

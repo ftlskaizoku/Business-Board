@@ -290,3 +290,16 @@ create policy "owner updates own businesses" on businesses
     auth.uid() = owner_id
     and exists (select 1 from profiles where id = auth.uid() and is_allowed)
   );
+
+-- ---------------------------------------------------------------------------
+-- migration: optional stock tracking + backdated manual sales/expenses
+-- Safe to re-run.
+-- ---------------------------------------------------------------------------
+alter table businesses add column if not exists track_stock boolean not null default true;
+
+-- restaurants usually don't track ingredient-level stock day to day; turn it
+-- off once for existing restaurant businesses (owners can re-enable any time
+-- from the Catalogue tab). Only ever flips rows still on the old default, so
+-- re-running this — or a later manual change back to true — won't be undone.
+update businesses set track_stock = false
+where niche = 'restaurant' and track_stock = true;

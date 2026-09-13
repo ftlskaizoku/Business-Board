@@ -9,6 +9,7 @@ export interface Business {
   custom_niche: string | null;
   type: BizType;
   currency: string;
+  track_stock: boolean;
   created_at: string;
 }
 

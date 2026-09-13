@@ -2,7 +2,7 @@ import { requireUserAndBusiness } from "@/lib/data";
 import { fmt } from "@/lib/format";
 import { hasProducts, hasServices } from "@/lib/niches";
 import { Card, EyebrowLabel } from "@/components/ui";
-import { addProduct, deleteProduct, addService, deleteService } from "../actions";
+import { addProduct, deleteProduct, addService, deleteService, setTrackStock } from "../actions";
 import type { Product, ServiceItem } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -35,14 +35,45 @@ export default async function CataloguePage() {
 
       {showProducts && (
         <>
+          <Card className="mb-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium">Suivi du stock</p>
+                <p className="text-xs text-muted mt-0.5">
+                  {business.track_stock
+                    ? "Chaque vente diminue le stock du produit."
+                    : "Désactivé — utile pour un restaurant où les plats ne sont pas comptés en stock."}
+                </p>
+              </div>
+              <form action={setTrackStock.bind(null, !business.track_stock)}>
+                <button
+                  type="submit"
+                  className={`shrink-0 text-xs font-medium px-3 py-1.5 rounded-full ${
+                    business.track_stock ? "bg-green-soft text-green" : "bg-line text-muted"
+                  }`}
+                >
+                  {business.track_stock ? "Activé" : "Désactivé"}
+                </button>
+              </form>
+            </div>
+          </Card>
+
           <Card>
             <p className="text-xs uppercase tracking-widest text-muted mb-3">Nouveau produit</p>
             <form action={addProduct} className="space-y-3">
               <input name="name" placeholder="Nom" required className="w-full border border-line rounded-lg px-3 py-2 bg-cream" />
               <input name="category" placeholder="Catégorie (ex. Plats)" className="w-full border border-line rounded-lg px-3 py-2 bg-cream" />
               <div className="flex gap-3">
-                <input name="price" type="number" placeholder={`Prix (${business.currency})`} required className="w-1/2 border border-line rounded-lg px-3 py-2 bg-cream" />
-                <input name="stock" type="number" placeholder="Stock initial" className="w-1/2 border border-line rounded-lg px-3 py-2 bg-cream" />
+                <input
+                  name="price"
+                  type="number"
+                  placeholder={`Prix (${business.currency})`}
+                  required
+                  className={business.track_stock ? "w-1/2 border border-line rounded-lg px-3 py-2 bg-cream" : "w-full border border-line rounded-lg px-3 py-2 bg-cream"}
+                />
+                {business.track_stock && (
+                  <input name="stock" type="number" placeholder="Stock initial" className="w-1/2 border border-line rounded-lg px-3 py-2 bg-cream" />
+                )}
               </div>
               <button type="submit" className="w-full bg-ochre text-white rounded-lg py-2.5 font-medium">
                 Ajouter au catalogue
@@ -61,9 +92,11 @@ export default async function CataloguePage() {
                       <p className="text-xs text-muted">{p.category} · {fmt(p.price, business.currency)}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`text-xs px-2 py-1 rounded-full ${p.stock < 5 ? "bg-red-soft text-red" : "bg-green-soft text-green"}`}>
-                        {p.stock <= 0 ? "Rupture" : `${p.stock} en stock`}
-                      </span>
+                      {business.track_stock && (
+                        <span className={`text-xs px-2 py-1 rounded-full ${p.stock < 5 ? "bg-red-soft text-red" : "bg-green-soft text-green"}`}>
+                          {p.stock <= 0 ? "Rupture" : `${p.stock} en stock`}
+                        </span>
+                      )}
                       <form action={deleteProduct.bind(null, p.id)}>
                         <button className="text-muted px-1">✕</button>
                       </form>
