@@ -7,6 +7,8 @@ const THEMES = [
   { id: "indigo", label: "Indigo", swatch: "#3F4B8C", bg: "#F3F4FB" },
   { id: "foret", label: "Forêt", swatch: "#3D8B5F", bg: "#F2F5EE" },
   { id: "corail", label: "Corail", swatch: "#D96B4F", bg: "#FDF3EF" },
+  { id: "slate", label: "Slate", swatch: "#47586E", bg: "#F1F3F5" },
+  { id: "purple", label: "Violet", swatch: "#7C4FBF", bg: "#F7F3FB" },
   { id: "sombre", label: "Sombre", swatch: "#E29A4E", bg: "#1B1712" },
   { id: "nuit-indigo", label: "Nuit indigo", swatch: "#7B86D9", bg: "#14162A" },
 ] as const;

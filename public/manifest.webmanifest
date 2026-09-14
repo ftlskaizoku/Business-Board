@@ -29,5 +29,35 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Tableau de bord"
+    },
+    {
+      "src": "/screenshots/stats.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Statistiques"
+    },
+    {
+      "src": "/screenshots/vente.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Nouvelle vente"
+    },
+    {
+      "src": "/screenshots/catalogue.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Catalogue"
+    }
   ]
 }
