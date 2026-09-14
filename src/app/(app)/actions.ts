@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireUserAndBusiness } from "@/lib/data";
+import { requireUserAndBusiness, requireAllowedUser } from "@/lib/data";
 import { todayKey } from "@/lib/format";
 
 // Accepts a yyyy-mm-dd string from a <input type="date">. Falls back to
@@ -10,6 +10,28 @@ function clampToPastOrToday(raw: string) {
   const today = todayKey();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return today;
   return raw > today ? today : raw;
+}
+
+export async function markTutorialSeen() {
+  const { supabase, user } = await requireAllowedUser();
+  await supabase.from("profiles").update({ tutorial_seen: true }).eq("id", user.id);
+}
+
+export async function updateFullName(formData: FormData) {
+  const { supabase, user } = await requireAllowedUser();
+  const fullName = String(formData.get("full_name") || "").trim();
+  if (!fullName) return;
+  await supabase.from("profiles").update({ full_name: fullName }).eq("id", user.id);
+  revalidatePath("/parametres");
+}
+
+export async function updateBusinessName(formData: FormData) {
+  const { supabase, business } = await requireUserAndBusiness();
+  const name = String(formData.get("name") || "").trim();
+  if (!name) return;
+  await supabase.from("businesses").update({ name }).eq("id", business.id);
+  revalidatePath("/parametres");
+  revalidatePath("/dashboard");
 }
 
 export async function addExpense(formData: FormData) {

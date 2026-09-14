@@ -19,6 +19,7 @@ export interface Profile {
   email: string | null;
   phone: string | null;
   is_allowed: boolean;
+  tutorial_seen: boolean;
   created_at: string;
 }
 

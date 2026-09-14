@@ -326,3 +326,9 @@ begin
   return new;
 end;
 $$ language plpgsql security definer;
+
+-- ---------------------------------------------------------------------------
+-- migration: first-use tutorial flag
+-- Safe to re-run.
+-- ---------------------------------------------------------------------------
+alter table profiles add column if not exists tutorial_seen boolean not null default false;

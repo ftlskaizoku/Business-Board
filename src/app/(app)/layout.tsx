@@ -1,15 +1,22 @@
 import { requireUserAndBusiness } from "@/lib/data";
-import { NICHES, nicheLabel } from "@/lib/niches";
+import { NICHES, nicheLabel, hasServices } from "@/lib/niches";
 import { ADMIN_EMAIL } from "@/lib/admin";
 import Link from "next/link";
 import BottomNav from "@/components/BottomNav";
-import SignOutButton from "@/components/SignOutButton";
+import FirstUseTutorial from "@/components/FirstUseTutorial";
+import { markTutorialSeen } from "./actions";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, business } = await requireUserAndBusiness();
+  const { supabase, user, business } = await requireUserAndBusiness();
   const n = NICHES[business.niche];
   const label = nicheLabel(business.niche, business.custom_niche);
   const isAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("tutorial_seen")
+    .eq("id", user.id)
+    .single();
 
   return (
     <div className="min-h-screen flex flex-col pb-16">
@@ -30,7 +37,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 Admin
               </Link>
             )}
-            <SignOutButton />
+            <Link href="/parametres" aria-label="Paramètres" className="text-muted text-lg leading-none">
+              ⚙
+            </Link>
           </div>
         </div>
       </header>
@@ -38,6 +47,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <main className="flex-1 px-5 py-5 max-w-2xl mx-auto w-full">{children}</main>
 
       <BottomNav type={business.type} />
+
+      {!profile?.tutorial_seen && (
+        <FirstUseTutorial
+          businessName={business.name}
+          showsServices={hasServices(business.type)}
+          onFinish={markTutorialSeen}
+        />
+      )}
     </div>
   );
 }

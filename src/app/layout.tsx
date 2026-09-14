@@ -38,6 +38,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="fr"
       className={`${inter.variable} ${spaceGrotesk.variable} ${plexMono.variable} h-full antialiased`}
     >
+      <head>
+        {/* Applies the saved theme before paint, so there's no flash of the
+            default palette. Kept as a tiny inline script since it has to run
+            before any CSS-var-dependent styles are painted. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var t=localStorage.getItem('bb-theme');if(t&&t!=='default'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}",
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-cream text-ink">
         <OfflineBanner />
         {children}

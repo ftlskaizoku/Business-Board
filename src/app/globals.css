@@ -16,6 +16,42 @@
   --color-red-soft: #F8E6E6;
 }
 
+/* Theme palettes. Every screen is already built on these tokens, so
+   swapping the values on <html data-theme="..."> reskins the whole app
+   without touching a single component. Applied via ThemeScript (inline,
+   blocking, avoids a flash) and changed from the Paramètres page. */
+[data-theme="indigo"] {
+  --color-cream: #F3F4FB;
+  --color-card: #FFFFFF;
+  --color-line: #DDE0F0;
+  --color-ink: #1E2140;
+  --color-muted: #6B6F97;
+  --color-ochre: #3F4B8C;
+  --color-ochre-soft: #E4E6F3;
+  --color-indigo: #C97A2B;
+  --color-indigo-soft: #F2E2CB;
+  --color-green: #3D8B5F;
+  --color-green-soft: #E4F3EA;
+  --color-red: #C24B4B;
+  --color-red-soft: #F8E6E6;
+}
+
+[data-theme="sombre"] {
+  --color-cream: #1B1712;
+  --color-card: #242019;
+  --color-line: #3A3327;
+  --color-ink: #F3EBDB;
+  --color-muted: #A79A80;
+  --color-ochre: #E29A4E;
+  --color-ochre-soft: #3E2E1B;
+  --color-indigo: #8891CC;
+  --color-indigo-soft: #262A47;
+  --color-green: #6FC492;
+  --color-green-soft: #1E3A29;
+  --color-red: #E08080;
+  --color-red-soft: #402323;
+}
+
 @theme inline {
   --color-cream: var(--color-cream);
   --color-card: var(--color-card);

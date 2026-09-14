@@ -29,10 +29,11 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const isAuthRoute = path.startsWith("/auth");
-  // /offline is precached by the service worker at install time (while online,
-  // possibly signed out) so it must never be redirected to /auth.
+  // "/" is the public landing page (it handles its own redirect for logged-in
+  // users) and /offline is precached by the service worker at install time
+  // (while online, possibly signed out) — neither should bounce to /auth.
   const isPublicAsset =
-    path.startsWith("/_next") || path.startsWith("/favicon") || path === "/offline";
+    path.startsWith("/_next") || path.startsWith("/favicon") || path === "/offline" || path === "/";
 
   if (!user && !isAuthRoute && !isPublicAsset) {
     const url = request.nextUrl.clone();
