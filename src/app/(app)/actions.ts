@@ -14,14 +14,15 @@ function clampToPastOrToday(raw: string) {
 
 export async function markTutorialSeen() {
   const { supabase, user } = await requireAllowedUser();
-  await supabase.from("profiles").update({ tutorial_seen: true }).eq("id", user.id);
+  await supabase.from("profiles").upsert({ id: user.id, tutorial_seen: true }, { onConflict: "id" });
+  revalidatePath("/", "layout");
 }
 
 export async function updateFullName(formData: FormData) {
   const { supabase, user } = await requireAllowedUser();
   const fullName = String(formData.get("full_name") || "").trim();
   if (!fullName) return;
-  await supabase.from("profiles").update({ full_name: fullName }).eq("id", user.id);
+  await supabase.from("profiles").upsert({ id: user.id, full_name: fullName }, { onConflict: "id" });
   revalidatePath("/parametres");
 }
 

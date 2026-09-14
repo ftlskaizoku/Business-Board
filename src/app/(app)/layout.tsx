@@ -7,16 +7,10 @@ import FirstUseTutorial from "@/components/FirstUseTutorial";
 import { markTutorialSeen } from "./actions";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const { supabase, user, business } = await requireUserAndBusiness();
+  const { user, business, profile } = await requireUserAndBusiness();
   const n = NICHES[business.niche];
   const label = nicheLabel(business.niche, business.custom_niche);
   const isAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("tutorial_seen")
-    .eq("id", user.id)
-    .single();
 
   return (
     <div className="min-h-screen flex flex-col pb-16">

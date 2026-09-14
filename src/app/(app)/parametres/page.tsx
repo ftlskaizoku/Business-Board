@@ -10,8 +10,7 @@ import { updateFullName, updateBusinessName } from "../actions";
 export const dynamic = "force-dynamic";
 
 export default async function ParametresPage() {
-  const { supabase, user, business } = await requireUserAndBusiness();
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+  const { user, business, profile } = await requireUserAndBusiness();
 
   const isAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
   const apkUrl = process.env.NEXT_PUBLIC_APK_URL || null;
