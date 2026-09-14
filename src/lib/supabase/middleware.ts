@@ -32,8 +32,18 @@ export async function updateSession(request: NextRequest) {
   // "/" is the public landing page (it handles its own redirect for logged-in
   // users) and /offline is precached by the service worker at install time
   // (while online, possibly signed out) — neither should bounce to /auth.
+  // manifest.webmanifest, sw.js, and /icons/* must stay reachable without a
+  // session too: browsers, crawlers (PWABuilder), and the service worker
+  // fetch these while logged out, and a redirect to the /auth HTML page in
+  // their place breaks installability checks.
   const isPublicAsset =
-    path.startsWith("/_next") || path.startsWith("/favicon") || path === "/offline" || path === "/";
+    path.startsWith("/_next") ||
+    path.startsWith("/favicon") ||
+    path === "/offline" ||
+    path === "/" ||
+    path === "/manifest.webmanifest" ||
+    path === "/sw.js" ||
+    path.startsWith("/icons/");
 
   if (!user && !isAuthRoute && !isPublicAsset) {
     const url = request.nextUrl.clone();
