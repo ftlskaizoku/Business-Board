@@ -1,5 +1,9 @@
 export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`bg-card border border-line rounded-2xl p-4 ${className}`}>{children}</div>;
+  // min-w-0 lets this card shrink below its content's natural width when
+  // it's a grid/flex item (e.g. one of two columns on a narrow phone).
+  // Without it, a long unbroken value (a big FCFA figure, a long product
+  // name) forces the whole row wider than the screen instead of wrapping.
+  return <div className={`bg-card border border-line rounded-2xl p-4 min-w-0 ${className}`}>{children}</div>;
 }
 
 export function EyebrowLabel({ children }: { children: React.ReactNode }) {
@@ -20,10 +24,15 @@ export function Metric({
   const toneClass = tone === "good" ? "text-green" : tone === "bad" ? "text-red" : "text-ink";
   return (
     <Card>
-      <p className="text-xs text-muted mb-1">
+      <p className="text-xs text-muted mb-1 truncate">
         {label} {delta && <span className="font-mono text-[10.5px]">{delta}</span>}
       </p>
-      <p className={`font-mono text-xl font-medium ${toneClass}`}>{value}</p>
+      {/* break-words (not truncate): large FCFA figures must stay fully
+          readable, so they wrap onto a second line at the thousand-separator
+          spaces instead of being cut off or pushing the card off-screen. */}
+      <p className={`font-mono text-lg sm:text-xl font-medium leading-snug break-words ${toneClass}`}>
+        {value}
+      </p>
     </Card>
   );
 }

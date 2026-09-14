@@ -194,7 +194,7 @@ export default async function StatsPage({
         <p className={`text-sm mb-1 ${monthTotals.sales - monthTotals.expenses >= 0 ? "text-green" : "text-red"}`}>
           Bénéfice net du mois
         </p>
-        <p className={`font-mono text-2xl font-medium ${monthTotals.sales - monthTotals.expenses >= 0 ? "text-green" : "text-red"}`}>
+        <p className={`font-mono text-2xl font-medium break-words ${monthTotals.sales - monthTotals.expenses >= 0 ? "text-green" : "text-red"}`}>
           {fmt(monthTotals.sales - monthTotals.expenses, business.currency)}
         </p>
       </Card>
@@ -249,21 +249,21 @@ export default async function StatsPage({
             </span>
           </div>
           <div className="grid grid-cols-2 gap-3 text-sm">
-            <div>
+            <div className="min-w-0">
               <p className="text-xs text-muted">Ventes</p>
-              <p className="font-medium mt-0.5">{fmt(active.sales, business.currency)}</p>
+              <p className="font-medium mt-0.5 break-words">{fmt(active.sales, business.currency)}</p>
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs text-muted">Dépenses</p>
-              <p className="font-medium mt-0.5">{fmt(active.expenses, business.currency)}</p>
+              <p className="font-medium mt-0.5 break-words">{fmt(active.expenses, business.currency)}</p>
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs text-muted">Produits vendus</p>
               <p className="font-medium mt-0.5">{active.items}</p>
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs text-muted">Meilleure vente</p>
-              <p className="font-medium mt-0.5">{topItemToday}</p>
+              <p className="font-medium mt-0.5 truncate">{topItemToday}</p>
             </div>
           </div>
         </Card>
@@ -295,9 +295,11 @@ export default async function StatsPage({
         ) : (
           topItems.map((t, i) => (
             <div key={t.name} className={i < topItems.length - 1 ? "mb-3" : ""}>
-              <div className="flex justify-between text-sm mb-1">
-                <span>{t.name} <span className="text-muted">· {t.qty}x</span></span>
-                <span className="font-mono">{fmt(t.revenue, business.currency)}</span>
+              <div className="flex justify-between gap-2 text-sm mb-1">
+                <span className="min-w-0 truncate">
+                  {t.name} <span className="text-muted">· {t.qty}x</span>
+                </span>
+                <span className="font-mono shrink-0">{fmt(t.revenue, business.currency)}</span>
               </div>
               <div className="h-[5px] rounded-full bg-ochre-soft">
                 <div className="h-full rounded-full bg-ochre" style={{ width: `${Math.round((t.revenue / maxItemRev) * 100)}%` }} />
@@ -314,9 +316,9 @@ export default async function StatsPage({
         ) : (
           expenseBreakdown.map((e, i) => (
             <div key={e.category} className={i < expenseBreakdown.length - 1 ? "mb-3" : ""}>
-              <div className="flex justify-between text-sm mb-1">
-                <span>{e.category}</span>
-                <span className="font-mono">{fmt(e.amount, business.currency)}</span>
+              <div className="flex justify-between gap-2 text-sm mb-1">
+                <span className="min-w-0 truncate">{e.category}</span>
+                <span className="font-mono shrink-0">{fmt(e.amount, business.currency)}</span>
               </div>
               <div className="h-[5px] rounded-full bg-indigo-soft">
                 <div className="h-full rounded-full bg-indigo" style={{ width: `${Math.round((e.amount / maxExpCat) * 100)}%` }} />

@@ -86,14 +86,14 @@ export default async function CataloguePage() {
               <EyebrowLabel>{g.category}</EyebrowLabel>
               <div className="space-y-2">
                 {g.items.map((p) => (
-                  <div key={p.id} className="flex justify-between items-center bg-card border border-line rounded-xl px-3.5 py-2.5">
-                    <div>
-                      <p className="text-sm">{p.name}</p>
-                      <p className="text-xs text-muted">{p.category} · {fmt(p.price, business.currency)}</p>
+                  <div key={p.id} className="flex justify-between items-center gap-2 bg-card border border-line rounded-xl px-3.5 py-2.5">
+                    <div className="min-w-0">
+                      <p className="text-sm truncate">{p.name}</p>
+                      <p className="text-xs text-muted truncate">{p.category} · {fmt(p.price, business.currency)}</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       {business.track_stock && (
-                        <span className={`text-xs px-2 py-1 rounded-full ${p.stock < 5 ? "bg-red-soft text-red" : "bg-green-soft text-green"}`}>
+                        <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${p.stock < 5 ? "bg-red-soft text-red" : "bg-green-soft text-green"}`}>
                           {p.stock <= 0 ? "Rupture" : `${p.stock} en stock`}
                         </span>
                       )}
@@ -133,13 +133,13 @@ export default async function CataloguePage() {
               <EyebrowLabel>{g.category}</EyebrowLabel>
               <div className="space-y-2">
                 {g.items.map((s) => (
-                  <div key={s.id} className="flex justify-between items-center bg-card border border-line rounded-xl px-3.5 py-2.5">
-                    <div>
-                      <p className="text-sm">{s.name}</p>
-                      <p className="text-xs text-muted">{fmt(s.price, business.currency)}</p>
+                  <div key={s.id} className="flex justify-between items-center gap-2 bg-card border border-line rounded-xl px-3.5 py-2.5">
+                    <div className="min-w-0">
+                      <p className="text-sm truncate">{s.name}</p>
+                      <p className="text-xs text-muted truncate">{fmt(s.price, business.currency)}</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs px-2 py-1 rounded-full bg-indigo-soft text-indigo">{s.duration}</span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-xs px-2 py-1 rounded-full bg-indigo-soft text-indigo whitespace-nowrap">{s.duration}</span>
                       <form action={deleteService.bind(null, s.id)}>
                         <button className="text-muted px-1">✕</button>
                       </form>

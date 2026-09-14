@@ -38,12 +38,12 @@ export default async function ClientsPage() {
       ) : (
         <div className="space-y-2">
           {customers.map((c) => (
-            <div key={c.id} className="flex justify-between items-center bg-card border border-line rounded-xl px-3.5 py-2.5">
-              <div>
-                <p className="text-sm">{c.name}</p>
-                <p className="text-xs text-muted">{c.phone || "—"} · {c.visits} visite{c.visits > 1 ? "s" : ""}</p>
+            <div key={c.id} className="flex justify-between items-center gap-2 bg-card border border-line rounded-xl px-3.5 py-2.5">
+              <div className="min-w-0">
+                <p className="text-sm truncate">{c.name}</p>
+                <p className="text-xs text-muted truncate">{c.phone || "—"} · {c.visits} visite{c.visits > 1 ? "s" : ""}</p>
               </div>
-              <span className="font-mono text-sm">{fmt(c.total_spend, business.currency)}</span>
+              <span className="font-mono text-sm shrink-0">{fmt(c.total_spend, business.currency)}</span>
             </div>
           ))}
         </div>

@@ -87,9 +87,9 @@ export default async function DashboardPage() {
               <p className="text-sm font-medium mb-2">Stock faible</p>
               <div className="space-y-1">
                 {lowStockItems.map((p) => (
-                  <div key={p.name} className="flex justify-between text-sm">
-                    <span>{p.name}</span>
-                    <span className="text-red font-mono">{p.stock} restant{p.stock > 1 ? "s" : ""}</span>
+                  <div key={p.name} className="flex justify-between gap-2 text-sm">
+                    <span className="min-w-0 truncate">{p.name}</span>
+                    <span className="text-red font-mono shrink-0">{p.stock} restant{p.stock > 1 ? "s" : ""}</span>
                   </div>
                 ))}
               </div>

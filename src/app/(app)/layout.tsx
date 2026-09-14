@@ -15,17 +15,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen flex flex-col pb-16">
       <header className="px-5 pt-6 pb-4 border-b border-line bg-card">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="w-8 h-8 rounded-full bg-ochre-soft flex items-center justify-center text-base">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="w-8 h-8 shrink-0 rounded-full bg-ochre-soft flex items-center justify-center text-base">
               {n.icon}
             </span>
-            <div>
-              <p className="font-display font-semibold leading-tight">{business.name}</p>
-              <p className="text-xs text-muted leading-tight">{label}</p>
+            <div className="min-w-0">
+              <p className="font-display font-semibold leading-tight truncate">{business.name}</p>
+              <p className="text-xs text-muted leading-tight truncate">{label}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             {isAdmin && (
               <Link href="/admin" className="text-xs font-medium text-indigo">
                 Admin

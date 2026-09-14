@@ -57,12 +57,12 @@ export default function RdvClient({
           {takenSlots
             .sort((a, b) => a.slot_time.localeCompare(b.slot_time))
             .map((s) => (
-              <div key={s.id} className="flex justify-between items-center bg-card border border-line rounded-xl px-3.5 py-2.5">
-                <div>
+              <div key={s.id} className="flex justify-between items-center gap-2 bg-card border border-line rounded-xl px-3.5 py-2.5">
+                <div className="min-w-0">
                   <p className="text-sm font-mono">{s.slot_time}</p>
-                  <p className="text-xs text-muted">{s.client}</p>
+                  <p className="text-xs text-muted truncate">{s.client}</p>
                 </div>
-                <span className="text-xs text-muted">{s.service_name}</span>
+                <span className="text-xs text-muted shrink-0 truncate max-w-[40%]">{s.service_name}</span>
               </div>
             ))}
         </div>
