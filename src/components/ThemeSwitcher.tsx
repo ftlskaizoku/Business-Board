@@ -5,7 +5,10 @@ import { useEffect, useState } from "react";
 const THEMES = [
   { id: "default", label: "Ochre", swatch: "#C97A2B", bg: "#FBF6EE" },
   { id: "indigo", label: "Indigo", swatch: "#3F4B8C", bg: "#F3F4FB" },
+  { id: "foret", label: "Forêt", swatch: "#3D8B5F", bg: "#F2F5EE" },
+  { id: "corail", label: "Corail", swatch: "#D96B4F", bg: "#FDF3EF" },
   { id: "sombre", label: "Sombre", swatch: "#E29A4E", bg: "#1B1712" },
+  { id: "nuit-indigo", label: "Nuit indigo", swatch: "#7B86D9", bg: "#14162A" },
 ] as const;
 
 const STORAGE_KEY = "bb-theme";

@@ -14,6 +14,7 @@ export default async function ParametresPage() {
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
 
   const isAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  const apkUrl = process.env.NEXT_PUBLIC_APK_URL || null;
   const memberSince = new Date(profile?.created_at || user.created_at).toLocaleDateString("fr-FR", {
     month: "long",
     year: "numeric",
@@ -88,6 +89,35 @@ export default async function ParametresPage() {
       <EyebrowLabel>Apparence</EyebrowLabel>
       <Card>
         <ThemeSwitcher />
+      </Card>
+
+      <EyebrowLabel>Application Android</EyebrowLabel>
+      <Card>
+        {apkUrl ? (
+          <>
+            <p className="text-sm font-medium mb-1">Télécharger le fichier APK</p>
+            <p className="text-xs text-muted mb-3">
+              Installez Business Board directement sur votre téléphone Android, en dehors du Play Store.
+              Android peut demander d&apos;autoriser l&apos;installation depuis des sources inconnues la
+              première fois — c&apos;est normal.
+            </p>
+            <a
+              href={apkUrl}
+              download
+              className="inline-block bg-ochre text-white text-sm font-medium rounded-lg px-4 py-2.5"
+            >
+              Télécharger l&apos;APK
+            </a>
+          </>
+        ) : (
+          <>
+            <p className="text-sm font-medium mb-1">Bientôt disponible</p>
+            <p className="text-xs text-muted">
+              En attendant, vous pouvez ajouter Business Board à votre écran d&apos;accueil directement
+              depuis votre navigateur — la bannière d&apos;installation vous le proposera automatiquement.
+            </p>
+          </>
+        )}
       </Card>
 
       <EyebrowLabel>Aide</EyebrowLabel>
