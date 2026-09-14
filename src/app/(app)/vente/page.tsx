@@ -13,13 +13,18 @@ export default async function VentePage() {
   const showProducts = hasProducts(business.type);
   const showServices = hasServices(business.type);
 
-  let productsQuery = supabase.from("products").select("*").eq("business_id", business.id).order("category");
-  // Only businesses that track stock need to hide sold-out products —
-  // e.g. a restaurant's dishes aren't backed by a countable stock.
-  if (business.track_stock) productsQuery = productsQuery.gt("stock", 0);
+  const products = showProducts
+    ? (
+        await supabase
+          .from("products")
+          .select("*")
+          .eq("business_id", business.id)
+          .order("category")
+          .returns<Product[]>()
+      ).data
+    : [];
 
-  const [{ data: products }, { data: services }, { data: slots }] = await Promise.all([
-    showProducts ? productsQuery.returns<Product[]>() : Promise.resolve({ data: [] as Product[] }),
+  const [{ data: services }, { data: slots }] = await Promise.all([
     showServices
       ? supabase.from("services").select("*").eq("business_id", business.id).returns<ServiceItem[]>()
       : Promise.resolve({ data: [] as ServiceItem[] }),

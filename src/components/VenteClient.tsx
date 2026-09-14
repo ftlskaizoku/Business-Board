@@ -26,15 +26,11 @@ export default function VenteClient({
   const itemCount = Object.values(cart).reduce((s, q) => s + q, 0);
 
   function addToCart(p: Product) {
-    setCart((c) => {
-      const current = c[p.id] || 0;
-      if (trackStock && current >= p.stock) return c;
-      return { ...c, [p.id]: current + 1 };
-    });
+    setCart((c) => ({ ...c, [p.id]: (c[p.id] || 0) + 1 }));
   }
 
   function setQty(p: Product, qty: number) {
-    const clamped = trackStock ? Math.max(0, Math.min(qty, p.stock)) : Math.max(0, qty);
+    const clamped = Math.max(0, qty);
     setCart((c) => {
       if (clamped <= 0) {
         const next = { ...c };
@@ -85,16 +81,17 @@ export default function VenteClient({
           <div className="grid grid-cols-2 gap-2.5">
             {g.items.map((p) => {
               const inCart = cart[p.id] || 0;
-              const disabled = trackStock && inCart >= p.stock;
               return (
                 <button
                   key={p.id}
                   onClick={() => addToCart(p)}
-                  disabled={disabled}
-                  className="text-left bg-card border border-line rounded-xl p-3 disabled:opacity-40 relative"
+                  className="text-left bg-card border border-line rounded-xl p-3 relative"
                 >
                   <p className="text-sm font-medium">{p.name}</p>
-                  <p className="text-xs text-muted mt-0.5">{fmt(p.price, currency)}</p>
+                  <p className="text-xs text-muted mt-0.5">
+                    {fmt(p.price, currency)}
+                    {trackStock && <span className="ml-1.5">· {p.stock} en stock</span>}
+                  </p>
                   {inCart > 0 && (
                     <span className="absolute top-2 right-2 bg-ochre text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
                       {inCart}
@@ -172,14 +169,12 @@ export default function VenteClient({
                       type="number"
                       inputMode="numeric"
                       min={1}
-                      max={trackStock ? product.stock : undefined}
                       value={qty}
                       onChange={(e) => setQty(product, Number(e.target.value) || 0)}
                       className="w-12 text-center border border-line rounded-lg py-1 bg-cream font-mono text-sm outline-none focus:border-ochre"
                     />
                     <button
                       onClick={() => setQty(product, qty + 1)}
-                      disabled={trackStock && qty >= product.stock}
                       className="w-8 h-8 rounded-full border border-line flex items-center justify-center text-lg leading-none disabled:opacity-30"
                       aria-label="Augmenter la quantité"
                     >

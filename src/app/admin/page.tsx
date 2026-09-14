@@ -94,9 +94,9 @@ export default async function AdminPage() {
           return (
             <Card key={p.id} className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-sm font-medium truncate">{p.full_name || p.email || "Sans nom"}</p>
+                <p className="text-sm font-medium truncate">{p.full_name || p.email || p.phone || "Sans nom"}</p>
                 <p className="text-xs text-muted truncate">
-                  {p.email || "—"}
+                  {p.email || p.phone || "—"}
                   {biz ? ` · ${biz.name}` : ""}
                 </p>
               </div>

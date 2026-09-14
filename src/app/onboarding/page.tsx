@@ -3,36 +3,50 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { NICHES, NICHE_ORDER } from "@/lib/niches";
+import { NICHES, NICHE_ORDER, hasProducts } from "@/lib/niches";
 import type { Niche, BizType } from "@/lib/types";
+
+type Step = "niche" | "type" | "stock" | "name";
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const [step, setStep] = useState(1);
   const [niche, setNiche] = useState<Niche | null>(null);
   const [customNiche, setCustomNiche] = useState("");
   const [type, setType] = useState<BizType | null>(null);
+  const [trackStock, setTrackStock] = useState(true);
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [stepIndex, setStepIndex] = useState(0);
 
   const nicheConfig = niche ? NICHES[niche] : null;
   const needsTypeStep = nicheConfig ? nicheConfig.allowedTypes.length > 1 : false;
+  const needsStockStep = !!type && hasProducts(type);
+
+  const steps: Step[] = [
+    "niche",
+    ...(needsTypeStep ? (["type"] as const) : []),
+    ...(needsStockStep ? (["stock"] as const) : []),
+    "name",
+  ];
+  const currentStep = steps[stepIndex] ?? "niche";
 
   function pickNiche(n: Niche) {
     setNiche(n);
     setType(NICHES[n].defaultType);
+    // Restaurants typically don't track their menu items as stock — dishes
+    // aren't backed by a countable number, unlike a boutique's items. The
+    // stock step lets them flip this either way before continuing.
+    setTrackStock(n !== "restaurant");
   }
 
   const step1Ready = niche === "autre" ? !!niche && customNiche.trim().length > 0 : !!niche;
 
   function next() {
-    if (step === 1 && step1Ready) setStep(needsTypeStep ? 2 : 3);
-    else if (step === 2 && type) setStep(3);
+    setStepIndex((i) => Math.min(i + 1, steps.length - 1));
   }
   function back() {
-    if (step === 3) setStep(needsTypeStep ? 2 : 1);
-    else if (step === 2) setStep(1);
+    setStepIndex((i) => Math.max(i - 1, 0));
   }
 
   async function createBusiness() {
@@ -56,10 +70,7 @@ export default function OnboardingPage() {
       custom_niche: niche === "autre" ? customNiche.trim() : null,
       type,
       currency: "FCFA",
-      // Restaurants typically don't track ingredient-level stock day to day;
-      // every other niche starts with stock tracking on. Editable later
-      // from the Catalogue tab either way.
-      track_stock: niche !== "restaurant",
+      track_stock: needsStockStep ? trackStock : true,
     });
     setLoading(false);
     if (error) return setError(error.message);
@@ -70,23 +81,14 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen flex flex-col p-6 max-w-md mx-auto w-full">
       <div className="flex gap-1.5 mb-8 mt-2">
-        {[1, 2, 3].map((s) => (
-          <span
-            key={s}
-            className={`h-1 flex-1 rounded-full ${
-              (s === 1 && step >= 1) ||
-              (s === 2 && step >= (needsTypeStep ? 2 : 3)) ||
-              (s === 3 && step >= 3)
-                ? "bg-ochre"
-                : "bg-line"
-            }`}
-          />
+        {steps.map((s, i) => (
+          <span key={s} className={`h-1 flex-1 rounded-full ${i <= stepIndex ? "bg-ochre" : "bg-line"}`} />
         ))}
       </div>
 
-      {step === 1 && (
+      {currentStep === "niche" && (
         <div>
-          <p className="text-xs uppercase tracking-widest text-muted mb-2">Étape 1</p>
+          <p className="text-xs uppercase tracking-widest text-muted mb-2">Étape {stepIndex + 1}</p>
           <h1 className="font-display text-2xl font-semibold mb-1">Quel type de commerce ?</h1>
           <p className="text-muted text-sm mb-6">Cela détermine les outils que nous vous montrons.</p>
 
@@ -136,9 +138,9 @@ export default function OnboardingPage() {
         </div>
       )}
 
-      {step === 2 && nicheConfig && (
+      {currentStep === "type" && nicheConfig && (
         <div>
-          <p className="text-xs uppercase tracking-widest text-muted mb-2">Étape 2</p>
+          <p className="text-xs uppercase tracking-widest text-muted mb-2">Étape {stepIndex + 1}</p>
           <h1 className="font-display text-2xl font-semibold mb-1">Produits, services, ou les deux ?</h1>
           <p className="text-muted text-sm mb-6">{nicheConfig.label} peut fonctionner des deux façons.</p>
 
@@ -173,9 +175,53 @@ export default function OnboardingPage() {
         </div>
       )}
 
-      {step === 3 && (
+      {currentStep === "stock" && (
         <div>
-          <p className="text-xs uppercase tracking-widest text-muted mb-2">Étape 3</p>
+          <p className="text-xs uppercase tracking-widest text-muted mb-2">Étape {stepIndex + 1}</p>
+          <h1 className="font-display text-2xl font-semibold mb-1">Suivre le stock de vos produits ?</h1>
+          <p className="text-muted text-sm mb-6">
+            {niche === "restaurant"
+              ? "Utile si vous voulez suivre les ingrédients ou produits que vous achetez pour préparer vos plats. Ce n'est pas obligatoire : les plats de votre menu n'ont pas besoin d'un stock de départ — au moment d'une vente, vous choisissez simplement le plat et la quantité vendue."
+              : "Si activé, chaque vente diminue automatiquement le stock du produit. Vous pourrez changer ce choix à tout moment depuis l'onglet Catalogue."}
+          </p>
+
+          <div className="space-y-2 mb-8">
+            <button
+              onClick={() => setTrackStock(true)}
+              className={`w-full text-left border rounded-xl p-4 ${
+                trackStock ? "border-ochre bg-ochre-soft" : "border-line bg-card"
+              }`}
+            >
+              <span className="block font-medium">Oui, suivre le stock</span>
+              <span className="block text-xs text-muted">Le stock diminue à chaque vente enregistrée.</span>
+            </button>
+            <button
+              onClick={() => setTrackStock(false)}
+              className={`w-full text-left border rounded-xl p-4 ${
+                !trackStock ? "border-ochre bg-ochre-soft" : "border-line bg-card"
+              }`}
+            >
+              <span className="block font-medium">Non, pas pour l&apos;instant</span>
+              <span className="block text-xs text-muted">
+                Vous enregistrez juste le produit et la quantité vendue à chaque vente.
+              </span>
+            </button>
+          </div>
+
+          <div className="flex gap-3">
+            <button onClick={back} className="flex-1 border border-line rounded-lg py-3 font-medium">
+              ← Retour
+            </button>
+            <button onClick={next} className="flex-1 bg-ochre text-white rounded-lg py-3 font-medium">
+              Continuer →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {currentStep === "name" && (
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted mb-2">Étape {stepIndex + 1}</p>
           <h1 className="font-display text-2xl font-semibold mb-1">Le nom de votre commerce</h1>
           <p className="text-muted text-sm mb-6">Il apparaîtra en haut de votre tableau de bord.</p>
 

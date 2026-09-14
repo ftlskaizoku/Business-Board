@@ -303,3 +303,26 @@ alter table businesses add column if not exists track_stock boolean not null def
 -- re-running this — or a later manual change back to true — won't be undone.
 update businesses set track_stock = false
 where niche = 'restaurant' and track_stock = true;
+
+-- ---------------------------------------------------------------------------
+-- migration: phone number sign-up
+-- Safe to re-run. Note: signing up/in with a phone number still needs an SMS
+-- provider (Twilio, MessageBird, Vonage...) configured under
+-- Authentication → Providers → Phone in the Supabase dashboard — that part
+-- can't be done from SQL and isn't free (per-SMS cost from the provider).
+-- ---------------------------------------------------------------------------
+alter table profiles add column if not exists phone text;
+
+update profiles p
+set phone = u.phone
+from auth.users u
+where p.id = u.id and p.phone is distinct from u.phone;
+
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, full_name, email, phone)
+  values (new.id, new.raw_user_meta_data ->> 'full_name', new.email, new.phone);
+  return new;
+end;
+$$ language plpgsql security definer;
