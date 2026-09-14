@@ -1,4 +1,5 @@
 {
+  "id": "/",
   "name": "Business Board",
   "short_name": "Business Board",
   "description": "Le tableau de bord de votre commerce",
@@ -8,6 +9,7 @@
   "background_color": "#FBF6EE",
   "theme_color": "#2B2013",
   "orientation": "portrait",
+  "categories": ["business", "finance", "productivity"],
   "icons": [
     {
       "src": "/icons/icon-192.png",
