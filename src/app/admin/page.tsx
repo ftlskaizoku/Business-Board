@@ -3,6 +3,7 @@ import { setUserAllowed } from "./actions";
 import { NICHES, nicheLabel } from "@/lib/niches";
 import { fmt, daysAgoKey } from "@/lib/format";
 import { Card } from "@/components/ui";
+import DeleteUserButton from "@/components/DeleteUserButton";
 import Link from "next/link";
 import type { Business, Profile } from "@/lib/types";
 
@@ -111,16 +112,19 @@ export default async function AdminPage() {
                 {isSelf ? (
                   <span className="text-[10px] text-muted px-1">Vous</span>
                 ) : (
-                  <form action={setUserAllowed.bind(null, p.id, !p.is_allowed)}>
-                    <button
-                      type="submit"
-                      className={`text-xs font-medium underline underline-offset-2 ${
-                        p.is_allowed ? "text-red" : "text-indigo"
-                      }`}
-                    >
-                      {p.is_allowed ? "Bloquer" : "Autoriser"}
-                    </button>
-                  </form>
+                  <div className="flex flex-col items-end gap-1">
+                    <form action={setUserAllowed.bind(null, p.id, !p.is_allowed)}>
+                      <button
+                        type="submit"
+                        className={`text-xs font-medium underline underline-offset-2 ${
+                          p.is_allowed ? "text-red" : "text-indigo"
+                        }`}
+                      >
+                        {p.is_allowed ? "Bloquer" : "Autoriser"}
+                      </button>
+                    </form>
+                    <DeleteUserButton userId={p.id} label={p.full_name || p.email || p.phone || "cet utilisateur"} />
+                  </div>
                 )}
               </div>
             </Card>

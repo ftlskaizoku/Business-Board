@@ -10,7 +10,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const { user, business, profile } = await requireUserAndBusiness();
   const n = NICHES[business.niche];
   const label = nicheLabel(business.niche, business.custom_niche);
-  const isAdmin = (user.email || "").trim().toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  const isAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
   return (
     <div className="min-h-screen flex flex-col pb-16">
