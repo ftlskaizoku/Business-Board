@@ -26,6 +26,14 @@ export default async function BlockedPage() {
         Votre accès à Business Board a été désactivé par l&apos;administrateur. Contactez-le
         pour en savoir plus ou pour le réactiver.
       </p>
+      <div className="bg-card border border-line rounded-xl px-4 py-3 mb-6 text-sm space-y-1">
+        <a href="mailto:khalifadylla@gmail.com" className="block text-ochre font-medium">
+          khalifadylla@gmail.com
+        </a>
+        <a href="tel:+221771432688" className="block text-ochre font-medium">
+          +221 77 143 26 88
+        </a>
+      </div>
       <SignOutButton />
     </div>
   );

@@ -55,6 +55,39 @@ export async function addExpense(formData: FormData) {
   revalidatePath("/stats");
 }
 
+export async function updateExpense(input: {
+  expenseId: string;
+  date: string;
+  category: string;
+  amount: number;
+  note: string;
+}) {
+  const { supabase, business } = await requireUserAndBusiness();
+  if (!input.expenseId || !input.amount) return;
+
+  await supabase
+    .from("expenses")
+    .update({
+      expense_date: clampToPastOrToday(input.date),
+      category: input.category || "Autre",
+      amount: input.amount,
+      note: input.note,
+    })
+    .eq("id", input.expenseId)
+    .eq("business_id", business.id);
+  revalidatePath("/depenses");
+  revalidatePath("/dashboard");
+  revalidatePath("/stats");
+}
+
+export async function deleteExpense(expenseId: string) {
+  const { supabase, business } = await requireUserAndBusiness();
+  await supabase.from("expenses").delete().eq("id", expenseId).eq("business_id", business.id);
+  revalidatePath("/depenses");
+  revalidatePath("/dashboard");
+  revalidatePath("/stats");
+}
+
 export async function addProduct(formData: FormData) {
   const { supabase, business } = await requireUserAndBusiness();
   const name = String(formData.get("name") || "").trim();
@@ -178,6 +211,57 @@ export async function addManualSale(formData: FormData) {
     price: amount,
   });
 
+  revalidatePath("/vente");
+  revalidatePath("/dashboard");
+  revalidatePath("/stats");
+}
+
+// Replaces the sale's date and line items wholesale — simpler and less
+// error-prone than diffing against the previous items, since a correction
+// might add, remove, or reword a line just as often as it changes a number.
+// Note: this doesn't touch product stock counts either way. Stock is already
+// treated as an informational running total elsewhere in the app (see
+// checkout()), and sale_items doesn't keep a product_id to reliably match
+// back to — so a stock count may drift slightly after an edit and can be
+// corrected manually from Catalogue if that matters for this business.
+export async function updateSale(input: {
+  saleId: string;
+  date: string;
+  items: { name: string; qty: number; price: number }[];
+}) {
+  const { supabase, business } = await requireUserAndBusiness();
+  const items = input.items
+    .map((it) => ({
+      name: it.name.trim() || "Article",
+      qty: Math.max(1, Math.round(it.qty) || 1),
+      price: Math.max(0, it.price) || 0,
+    }))
+    .filter((it) => it.name);
+  if (!input.saleId || items.length === 0) return;
+
+  const { data: sale } = await supabase
+    .from("sales")
+    .select("id")
+    .eq("id", input.saleId)
+    .eq("business_id", business.id)
+    .single();
+  if (!sale) return;
+
+  const saleDate = clampToPastOrToday(input.date);
+  const total = items.reduce((s, it) => s + it.qty * it.price, 0);
+
+  await supabase.from("sales").update({ sale_date: saleDate, total }).eq("id", sale.id);
+  await supabase.from("sale_items").delete().eq("sale_id", sale.id);
+  await supabase.from("sale_items").insert(items.map((it) => ({ sale_id: sale.id, ...it })));
+
+  revalidatePath("/vente");
+  revalidatePath("/dashboard");
+  revalidatePath("/stats");
+}
+
+export async function deleteSale(saleId: string) {
+  const { supabase, business } = await requireUserAndBusiness();
+  await supabase.from("sales").delete().eq("id", saleId).eq("business_id", business.id);
   revalidatePath("/vente");
   revalidatePath("/dashboard");
   revalidatePath("/stats");

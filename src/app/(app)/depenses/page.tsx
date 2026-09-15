@@ -1,7 +1,8 @@
 import { requireUserAndBusiness } from "@/lib/data";
-import { fmt, todayKey } from "@/lib/format";
+import { todayKey } from "@/lib/format";
 import { EXPENSE_CATEGORIES } from "@/lib/types";
 import { Card, EyebrowLabel, EmptyNote } from "@/components/ui";
+import ExpenseRow from "@/components/ExpenseRow";
 import { addExpense } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -75,19 +76,7 @@ export default async function DepensesPage() {
       ) : (
         <div className="space-y-2">
           {expenses.map((e) => (
-            <div
-              key={e.id}
-              className="flex justify-between items-center bg-card border border-line rounded-xl px-3.5 py-2.5"
-            >
-              <div>
-                <p className="text-sm">{e.category}</p>
-                <p className="text-xs text-muted">
-                  {e.expense_date}
-                  {e.note ? ` · ${e.note}` : ""}
-                </p>
-              </div>
-              <span className="font-mono text-sm text-red">-{fmt(e.amount, business.currency)}</span>
-            </div>
+            <ExpenseRow key={e.id} expense={e} currency={business.currency} />
           ))}
         </div>
       )}

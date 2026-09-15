@@ -4,6 +4,8 @@ import { todayKey } from "@/lib/format";
 import VenteClient from "@/components/VenteClient";
 import RdvClient from "@/components/RdvClient";
 import ManualSaleForm from "@/components/ManualSaleForm";
+import SaleRow from "@/components/SaleRow";
+import { EyebrowLabel, EmptyNote } from "@/components/ui";
 import type { Product, ServiceItem, AppointmentSlot } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +26,7 @@ export default async function VentePage() {
       ).data
     : [];
 
-  const [{ data: services }, { data: slots }] = await Promise.all([
+  const [{ data: services }, { data: slots }, { data: recentSales }] = await Promise.all([
     showServices
       ? supabase.from("services").select("*").eq("business_id", business.id).returns<ServiceItem[]>()
       : Promise.resolve({ data: [] as ServiceItem[] }),
@@ -37,6 +39,13 @@ export default async function VentePage() {
           .eq("status", "taken")
           .returns<AppointmentSlot[]>()
       : Promise.resolve({ data: [] as AppointmentSlot[] }),
+    supabase
+      .from("sales")
+      .select("id, sale_date, total, sale_items(id, name, qty, price)")
+      .eq("business_id", business.id)
+      .order("sale_date", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(15),
   ]);
 
   return (
@@ -58,6 +67,17 @@ export default async function VentePage() {
       {showServices && <RdvClient services={services || []} takenSlots={slots || []} currency={business.currency} />}
 
       <ManualSaleForm currency={business.currency} />
+
+      <EyebrowLabel>Ventes récentes</EyebrowLabel>
+      {!recentSales || recentSales.length === 0 ? (
+        <EmptyNote>Aucune vente enregistrée.</EmptyNote>
+      ) : (
+        <div className="space-y-2">
+          {recentSales.map((s) => (
+            <SaleRow key={s.id} sale={s} currency={business.currency} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
