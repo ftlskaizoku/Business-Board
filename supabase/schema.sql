@@ -332,3 +332,27 @@ $$ language plpgsql security definer;
 -- Safe to re-run.
 -- ---------------------------------------------------------------------------
 alter table profiles add column if not exists tutorial_seen boolean not null default false;
+
+-- ---------------------------------------------------------------------------
+-- migration: Google sign-in
+-- Safe to re-run. Note: this only prepares the database side — Google
+-- sign-in itself still needs to be turned on under Authentication →
+-- Providers → Google in the Supabase dashboard (Client ID + secret from
+-- Google Cloud Console), and /auth/callback added to Authentication → URL
+-- Configuration → Redirect URLs. Can't be done from SQL.
+-- ---------------------------------------------------------------------------
+-- Google puts the display name under "full_name" in most cases but "name" in
+-- others depending on the account — try both so it isn't left blank.
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, full_name, email, phone)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data ->> 'full_name', new.raw_user_meta_data ->> 'name'),
+    new.email,
+    new.phone
+  );
+  return new;
+end;
+$$ language plpgsql security definer;
