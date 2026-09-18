@@ -204,7 +204,7 @@ export default async function StatsPage({
         <MonthSelect months={months} current={month} />
       </div>
 
-      <div className="border border-line rounded-xl bg-card p-2.5">
+      <div className="border border-line rounded-xl bg-card p-2.5" data-tour="stats-calendar">
         <div className="grid grid-cols-7 gap-1 mb-1">
           {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
             <span key={i} className="text-center text-[11px] text-muted">

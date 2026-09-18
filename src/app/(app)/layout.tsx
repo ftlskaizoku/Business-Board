@@ -1,9 +1,9 @@
 import { requireUserAndBusiness } from "@/lib/data";
-import { NICHES, nicheLabel, hasServices } from "@/lib/niches";
+import { NICHES, nicheLabel, hasServices, hasProducts } from "@/lib/niches";
 import { ADMIN_EMAIL } from "@/lib/admin";
 import Link from "next/link";
 import BottomNav from "@/components/BottomNav";
-import FirstUseTutorial from "@/components/FirstUseTutorial";
+import TourProvider from "@/components/TourProvider";
 import { markTutorialSeen } from "./actions";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -13,42 +13,42 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const isAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
   return (
-    <div className="min-h-screen flex flex-col pb-16">
-      <header className="px-5 pt-6 pb-4 border-b border-line bg-card">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <span className="w-8 h-8 shrink-0 rounded-full bg-ochre-soft flex items-center justify-center text-base">
-              {n.icon}
-            </span>
-            <div className="min-w-0">
-              <p className="font-display font-semibold leading-tight truncate">{business.name}</p>
-              <p className="text-xs text-muted leading-tight truncate">{label}</p>
+    <TourProvider
+      autoStart={!profile?.tutorial_seen}
+      businessName={business.name}
+      showsServices={hasServices(business.type)}
+      showsProducts={hasProducts(business.type)}
+      onFinish={markTutorialSeen}
+    >
+      <div className="min-h-screen flex flex-col pb-16">
+        <header className="px-5 pt-6 pb-4 border-b border-line bg-card">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="w-8 h-8 shrink-0 rounded-full bg-ochre-soft flex items-center justify-center text-base">
+                {n.icon}
+              </span>
+              <div className="min-w-0">
+                <p className="font-display font-semibold leading-tight truncate">{business.name}</p>
+                <p className="text-xs text-muted leading-tight truncate">{label}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              {isAdmin && (
+                <Link href="/admin" className="text-xs font-medium text-indigo">
+                  Admin
+                </Link>
+              )}
+              <Link href="/parametres" aria-label="Paramètres" className="text-muted text-lg leading-none">
+                ⚙
+              </Link>
             </div>
           </div>
-          <div className="flex items-center gap-3 shrink-0">
-            {isAdmin && (
-              <Link href="/admin" className="text-xs font-medium text-indigo">
-                Admin
-              </Link>
-            )}
-            <Link href="/parametres" aria-label="Paramètres" className="text-muted text-lg leading-none">
-              ⚙
-            </Link>
-          </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="flex-1 px-5 py-5 max-w-2xl mx-auto w-full">{children}</main>
+        <main className="flex-1 px-5 py-5 max-w-2xl mx-auto w-full">{children}</main>
 
-      <BottomNav type={business.type} />
-
-      {!profile?.tutorial_seen && (
-        <FirstUseTutorial
-          businessName={business.name}
-          showsServices={hasServices(business.type)}
-          onFinish={markTutorialSeen}
-        />
-      )}
-    </div>
+        <BottomNav type={business.type} />
+      </div>
+    </TourProvider>
   );
 }

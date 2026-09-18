@@ -1,9 +1,17 @@
-export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+export function Card({
+  children,
+  className = "",
+  ...rest
+}: { children: React.ReactNode; className?: string } & React.HTMLAttributes<HTMLDivElement>) {
   // min-w-0 lets this card shrink below its content's natural width when
   // it's a grid/flex item (e.g. one of two columns on a narrow phone).
   // Without it, a long unbroken value (a big FCFA figure, a long product
   // name) forces the whole row wider than the screen instead of wrapping.
-  return <div className={`bg-card border border-line rounded-2xl p-4 min-w-0 ${className}`}>{children}</div>;
+  return (
+    <div className={`bg-card border border-line rounded-2xl p-4 min-w-0 ${className}`} {...rest}>
+      {children}
+    </div>
+  );
 }
 
 export function EyebrowLabel({ children }: { children: React.ReactNode }) {

@@ -29,7 +29,7 @@ export default function RdvClient({
   }
 
   return (
-    <div>
+    <div data-tour="vente-rdv">
       <p className="text-xs uppercase tracking-widest text-muted mb-2">Créneaux du jour</p>
       <div className="grid grid-cols-4 gap-2 mb-6">
         {DAY_SLOTS.map((time) => {

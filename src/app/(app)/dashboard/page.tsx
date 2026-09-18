@@ -50,7 +50,7 @@ export default async function DashboardPage() {
       <p className="text-xs uppercase tracking-widest text-muted mb-1">Aujourd&apos;hui</p>
       <h1 className="font-display text-2xl font-semibold mb-5">Bonjour</h1>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3" data-tour="dashboard-metrics">
         <Metric label="Ventes du jour" value={fmt(salesToday, business.currency)} />
         <Metric label="Dépenses du jour" value={fmt(expensesToday, business.currency)} />
         <Metric

@@ -74,7 +74,7 @@ export default function VenteClient({
     .filter((l): l is { product: Product; qty: number } => !!l);
 
   return (
-    <div className="pb-20">
+    <div className="pb-20" data-tour="vente-grid">
       {groups.map((g) => (
         <div key={g.category} className="mb-5">
           <p className="text-xs uppercase tracking-widest text-muted mb-2">{g.category}</p>

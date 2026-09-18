@@ -22,7 +22,7 @@ export default async function DepensesPage() {
       <p className="text-xs uppercase tracking-widest text-muted mb-1">Dépenses</p>
       <h1 className="font-display text-2xl font-semibold mb-5">{business.name}</h1>
 
-      <Card>
+      <Card data-tour="depenses-form">
         <p className="text-xs uppercase tracking-widest text-muted mb-3">Nouvelle dépense</p>
         <form action={addExpense} className="space-y-3">
           <div>

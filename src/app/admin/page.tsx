@@ -4,6 +4,7 @@ import { NICHES, nicheLabel } from "@/lib/niches";
 import { fmt, daysAgoKey } from "@/lib/format";
 import { Card } from "@/components/ui";
 import DeleteUserButton from "@/components/DeleteUserButton";
+import AdminAutoRefresh from "@/components/AdminAutoRefresh";
 import Link from "next/link";
 import type { Business, Profile } from "@/lib/types";
 
@@ -54,9 +55,12 @@ export default async function AdminPage() {
     <div className="min-h-screen p-5 max-w-2xl mx-auto w-full">
       <div className="flex items-center justify-between mb-1">
         <p className="text-xs uppercase tracking-widest text-muted">Admin</p>
-        <Link href="/dashboard" className="text-xs text-indigo">
-          ← Retour à mon commerce
-        </Link>
+        <div className="flex items-center gap-3">
+          <AdminAutoRefresh />
+          <Link href="/dashboard" className="text-xs text-indigo">
+            ← Retour à mon commerce
+          </Link>
+        </div>
       </div>
       <h1 className="font-display text-2xl font-semibold mb-5">Vue d&apos;ensemble</h1>
 

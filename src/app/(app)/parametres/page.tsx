@@ -4,6 +4,7 @@ import { ADMIN_EMAIL } from "@/lib/admin";
 import { nicheLabel } from "@/lib/niches";
 import { Card, EyebrowLabel } from "@/components/ui";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
+import RestartTourButton from "@/components/RestartTourButton";
 import SignOutButton from "@/components/SignOutButton";
 import { updateFullName, updateBusinessName } from "../actions";
 
@@ -86,7 +87,7 @@ export default async function ParametresPage() {
       </Card>
 
       <EyebrowLabel>Apparence</EyebrowLabel>
-      <Card>
+      <Card data-tour="parametres-theme">
         <ThemeSwitcher />
       </Card>
 
@@ -120,10 +121,17 @@ export default async function ParametresPage() {
       </Card>
 
       <EyebrowLabel>Aide</EyebrowLabel>
+      <Card className="flex items-center justify-between mb-3">
+        <div>
+          <p className="text-sm font-medium">Visite guidée</p>
+          <p className="text-xs text-muted mt-0.5">Refaire le tour de l&apos;application, écran par écran.</p>
+        </div>
+        <RestartTourButton />
+      </Card>
       <Card className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium">Comment utiliser Business Board</p>
-          <p className="text-xs text-muted mt-0.5">Revoir le guide de prise en main.</p>
+          <p className="text-xs text-muted mt-0.5">Guide écrit, à consulter à votre rythme.</p>
         </div>
         <Link href="/aide" className="text-xs font-medium text-ochre shrink-0">
           Ouvrir →

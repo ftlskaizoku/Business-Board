@@ -58,7 +58,7 @@ export default async function CataloguePage() {
             </div>
           </Card>
 
-          <Card>
+          <Card data-tour="catalogue-form">
             <p className="text-xs uppercase tracking-widest text-muted mb-3">Nouveau produit</p>
             <form action={addProduct} className="space-y-3">
               <input name="name" placeholder="Nom" required className="w-full border border-line rounded-lg px-3 py-2 bg-cream" />
@@ -112,7 +112,7 @@ export default async function CataloguePage() {
       {showServices && (
         <>
           <div className="mt-8">
-            <Card>
+            <Card data-tour="catalogue-form">
               <p className="text-xs uppercase tracking-widest text-muted mb-3">Nouveau service</p>
               <form action={addService} className="space-y-3">
                 <input name="name" placeholder="Nom" required className="w-full border border-line rounded-lg px-3 py-2 bg-cream" />

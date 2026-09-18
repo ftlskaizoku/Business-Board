@@ -1,0 +1,109 @@
+"use client";
+
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { buildTourSteps } from "@/lib/tour-steps";
+import TourSpotlight from "./TourSpotlight";
+
+interface TourContextValue {
+  startTour: () => void;
+}
+
+const TourContext = createContext<TourContextValue | null>(null);
+
+// Lets any page under (app) — e.g. a "Revoir la visite guidée" button in
+// Paramètres — restart the tour without prop-drilling through the layout.
+export function useTour() {
+  const ctx = useContext(TourContext);
+  if (!ctx) throw new Error("useTour must be used within TourProvider");
+  return ctx;
+}
+
+export default function TourProvider({
+  children,
+  autoStart,
+  businessName,
+  showsServices,
+  showsProducts,
+  onFinish,
+}: {
+  children: React.ReactNode;
+  autoStart: boolean;
+  businessName: string;
+  showsServices: boolean;
+  showsProducts: boolean;
+  onFinish: () => Promise<void>;
+}) {
+  // Derived from props that don't change mid-tour, so plain useMemo (read
+  // safely during render) is the right tool here — not a ref.
+  const steps = useMemo(
+    () => buildTourSteps({ businessName, showsServices, showsProducts }),
+    [businessName, showsServices, showsProducts]
+  );
+  const [active, setActive] = useState(false);
+  const [stepIndex, setStepIndex] = useState(0);
+  const hasAutoStarted = useRef(false);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (autoStart && !hasAutoStarted.current) {
+      hasAutoStarted.current = true;
+      setStepIndex(0);
+      setActive(true);
+    }
+  }, [autoStart]);
+
+  const step = steps[stepIndex];
+
+  // Each step names the page it belongs to (e.g. /vente). Whenever the
+  // active step changes to one on a different page, navigate there — this
+  // is what makes the tour actually walk through the app instead of just
+  // describing it from one screen.
+  useEffect(() => {
+    if (active && step && step.page !== pathname) {
+      router.push(step.page);
+    }
+  }, [active, step, pathname, router]);
+
+  const finish = useCallback(() => {
+    setActive(false);
+    onFinish();
+  }, [onFinish]);
+
+  const next = useCallback(() => {
+    setStepIndex((i) => {
+      if (i >= steps.length - 1) {
+        finish();
+        return i;
+      }
+      return i + 1;
+    });
+  }, [steps.length, finish]);
+
+  const prev = useCallback(() => {
+    setStepIndex((i) => Math.max(0, i - 1));
+  }, []);
+
+  const startTour = useCallback(() => {
+    setStepIndex(0);
+    setActive(true);
+    if (steps[0].page !== pathname) router.push(steps[0].page);
+  }, [pathname, router, steps]);
+
+  return (
+    <TourContext.Provider value={{ startTour }}>
+      {children}
+      {active && step && (
+        <TourSpotlight
+          step={step}
+          index={stepIndex}
+          total={steps.length}
+          onNext={next}
+          onPrev={stepIndex > 0 ? prev : undefined}
+          onSkip={finish}
+        />
+      )}
+    </TourContext.Provider>
+  );
+}

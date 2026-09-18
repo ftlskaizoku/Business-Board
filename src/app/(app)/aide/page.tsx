@@ -48,7 +48,8 @@ export default async function AidePage() {
       <p className="text-xs uppercase tracking-widest text-muted mb-1">Aide</p>
       <h1 className="font-display text-2xl font-semibold mb-2">Comment utiliser Business Board</h1>
       <p className="text-sm text-muted mb-6">
-        Un rappel rapide de ce que chaque onglet permet de faire.
+        Un rappel rapide de ce que chaque onglet permet de faire. Pour une visite guidée qui vous
+        montre chaque écran directement, retournez dans Paramètres → Visite guidée.
       </p>
 
       {sections.map((s) => (
