@@ -27,15 +27,14 @@ const FEATURES = [
 
 export default async function RootPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = claimsData?.claims?.sub;
 
-  if (user) {
+  if (userId) {
     const { data: businesses } = await supabase
       .from("businesses")
       .select("id")
-      .eq("owner_id", user.id)
+      .eq("owner_id", userId)
       .limit(1);
 
     if (!businesses || businesses.length === 0) redirect("/onboarding");

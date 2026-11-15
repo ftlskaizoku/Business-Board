@@ -12,6 +12,12 @@ function clampToPastOrToday(raw: string) {
   return raw > today ? today : raw;
 }
 
+// Expense names are free text the owner types (and later re-picks from their
+// own history), so tidy spacing and cap the length; blank falls back to "Autre".
+function cleanExpenseName(raw: string) {
+  return raw.replace(/\s+/g, " ").trim().slice(0, 60) || "Autre";
+}
+
 export async function markTutorialSeen() {
   const { supabase, user } = await requireAllowedUser();
   await supabase.from("profiles").upsert({ id: user.id, tutorial_seen: true }, { onConflict: "id" });
@@ -37,7 +43,7 @@ export async function updateBusinessName(formData: FormData) {
 
 export async function addExpense(formData: FormData) {
   const { supabase, business } = await requireUserAndBusiness();
-  const category = String(formData.get("category") || "Autre");
+  const category = cleanExpenseName(String(formData.get("category") || ""));
   const amount = Number(formData.get("amount") || 0);
   const note = String(formData.get("note") || "");
   const expenseDate = clampToPastOrToday(String(formData.get("date") || ""));
@@ -69,7 +75,7 @@ export async function updateExpense(input: {
     .from("expenses")
     .update({
       expense_date: clampToPastOrToday(input.date),
-      category: input.category || "Autre",
+      category: cleanExpenseName(input.category || ""),
       amount: input.amount,
       note: input.note,
     })
@@ -108,6 +114,33 @@ export async function setTrackStock(trackStock: boolean) {
   const { supabase, business } = await requireUserAndBusiness();
   await supabase.from("businesses").update({ track_stock: trackStock }).eq("id", business.id);
   revalidatePath("/catalogue");
+  revalidatePath("/vente");
+  revalidatePath("/dashboard");
+  revalidatePath("/parametres");
+}
+
+// Adds units received to a product's current stock (e.g. +24 after a
+// delivery) — the owner enters how many came in, not the new total.
+export async function restockProduct(productId: string, quantity: number) {
+  const { supabase, business } = await requireUserAndBusiness();
+  const add = Math.round(quantity);
+  if (!productId || !Number.isFinite(add) || add <= 0 || add > 1_000_000) return;
+
+  const { data: product } = await supabase
+    .from("products")
+    .select("stock")
+    .eq("id", productId)
+    .eq("business_id", business.id)
+    .single();
+  if (!product) return;
+
+  await supabase
+    .from("products")
+    .update({ stock: product.stock + add })
+    .eq("id", productId)
+    .eq("business_id", business.id);
+  revalidatePath("/catalogue");
+  revalidatePath("/dashboard");
   revalidatePath("/vente");
 }
 

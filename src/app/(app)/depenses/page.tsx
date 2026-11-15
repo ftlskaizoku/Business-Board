@@ -1,21 +1,43 @@
 import { requireUserAndBusiness } from "@/lib/data";
-import { todayKey } from "@/lib/format";
 import { EXPENSE_CATEGORIES } from "@/lib/types";
 import { Card, EyebrowLabel, EmptyNote } from "@/components/ui";
 import ExpenseRow from "@/components/ExpenseRow";
-import { addExpense } from "../actions";
+import ExpenseForm from "@/components/ExpenseForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function DepensesPage() {
   const { supabase, business } = await requireUserAndBusiness();
-  const { data: expenses } = await supabase
-    .from("expenses")
-    .select("*")
-    .eq("business_id", business.id)
-    .order("expense_date", { ascending: false })
-    .order("created_at", { ascending: false })
-    .limit(20);
+  const [{ data: expenses }, { data: nameRows }] = await Promise.all([
+    supabase
+      .from("expenses")
+      .select("*")
+      .eq("business_id", business.id)
+      .order("expense_date", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(20),
+    // Every expense name this business has used, newest first — becomes the
+    // tap-to-reuse list in the form. Names are compared ignoring case.
+    supabase
+      .from("expenses")
+      .select("category")
+      .eq("business_id", business.id)
+      .order("created_at", { ascending: false })
+      .limit(300),
+  ]);
+
+  const stats = new Map<string, { name: string; count: number; order: number }>();
+  (nameRows || []).forEach((r, i) => {
+    const name = String(r.category || "").trim();
+    if (!name) return;
+    const key = name.toLowerCase();
+    const cur = stats.get(key);
+    if (cur) cur.count += 1;
+    else stats.set(key, { name, count: 1, order: i });
+  });
+  const history = [...stats.values()]
+    .sort((a, b) => b.count - a.count || a.order - b.order)
+    .map((s) => s.name);
 
   return (
     <div>
@@ -24,50 +46,7 @@ export default async function DepensesPage() {
 
       <Card data-tour="depenses-form">
         <p className="text-xs uppercase tracking-widest text-muted mb-3">Nouvelle dépense</p>
-        <form action={addExpense} className="space-y-3">
-          <div>
-            <label className="block text-xs text-muted mb-1">Date</label>
-            <input
-              name="date"
-              type="date"
-              defaultValue={todayKey()}
-              max={todayKey()}
-              required
-              className="w-full border border-line rounded-lg px-3 py-2 bg-cream"
-            />
-          </div>
-          <div>
-            <label className="block text-xs text-muted mb-1">Catégorie</label>
-            <select name="category" className="w-full border border-line rounded-lg px-3 py-2 bg-cream">
-              {EXPENSE_CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs text-muted mb-1">Montant ({business.currency})</label>
-            <input
-              name="amount"
-              type="number"
-              required
-              placeholder="5000"
-              className="w-full border border-line rounded-lg px-3 py-2 bg-cream"
-            />
-          </div>
-          <div>
-            <label className="block text-xs text-muted mb-1">Note (optionnel)</label>
-            <input
-              name="note"
-              placeholder="Fournisseur, détail…"
-              className="w-full border border-line rounded-lg px-3 py-2 bg-cream"
-            />
-          </div>
-          <button type="submit" className="w-full bg-ochre text-white rounded-lg py-2.5 font-medium">
-            Enregistrer la dépense
-          </button>
-        </form>
+        <ExpenseForm currency={business.currency} history={history} defaults={EXPENSE_CATEGORIES} />
       </Card>
 
       <EyebrowLabel>Récentes</EyebrowLabel>
@@ -76,7 +55,7 @@ export default async function DepensesPage() {
       ) : (
         <div className="space-y-2">
           {expenses.map((e) => (
-            <ExpenseRow key={e.id} expense={e} currency={business.currency} />
+            <ExpenseRow key={e.id} expense={e} currency={business.currency} suggestions={history} />
           ))}
         </div>
       )}

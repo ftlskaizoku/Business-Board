@@ -1,12 +1,20 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { updateExpense, deleteExpense } from "@/app/(app)/actions";
 import { fmt, todayKey } from "@/lib/format";
-import { EXPENSE_CATEGORIES } from "@/lib/types";
 import type { Expense } from "@/lib/types";
 
-export default function ExpenseRow({ expense, currency }: { expense: Expense; currency: string }) {
+export default function ExpenseRow({
+  expense,
+  currency,
+  suggestions,
+}: {
+  expense: Expense;
+  currency: string;
+  suggestions: string[];
+}) {
+  const listId = useId();
   const [editing, setEditing] = useState(false);
   const [pending, startTransition] = useTransition();
   const [date, setDate] = useState(expense.expense_date);
@@ -39,17 +47,19 @@ export default function ExpenseRow({ expense, currency }: { expense: Expense; cu
             onChange={(e) => setDate(e.target.value)}
             className="border border-line rounded-lg px-2.5 py-1.5 bg-cream text-sm"
           />
-          <select
+          <input
+            list={listId}
             value={category}
             onChange={(e) => setCategory(e.target.value)}
+            maxLength={60}
+            placeholder="Quelle dépense ?"
             className="border border-line rounded-lg px-2.5 py-1.5 bg-cream text-sm"
-          >
-            {EXPENSE_CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
+          />
+          <datalist id={listId}>
+            {suggestions.map((c) => (
+              <option key={c} value={c} />
             ))}
-          </select>
+          </datalist>
         </div>
         <input
           type="number"
@@ -73,7 +83,7 @@ export default function ExpenseRow({ expense, currency }: { expense: Expense; cu
           </button>
           <button
             onClick={save}
-            disabled={pending || !amount}
+            disabled={pending || !amount || !category.trim()}
             className="flex-1 bg-ochre text-white rounded-lg py-2 text-sm font-medium disabled:opacity-60"
           >
             {pending ? "…" : "Enregistrer"}

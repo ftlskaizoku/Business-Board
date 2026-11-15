@@ -1,6 +1,7 @@
 import { requireUserAndBusiness } from "@/lib/data";
 import { fmt, todayKey, daysAgoKey } from "@/lib/format";
 import { hasProducts } from "@/lib/niches";
+import Link from "next/link";
 import { Metric, Card, EmptyNote, EyebrowLabel } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -8,7 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   const { supabase, business } = await requireUserAndBusiness();
   const today = todayKey();
-  const showStock = hasProducts(business.type);
+  const showStock = hasProducts(business.type) && business.track_stock;
 
   const [{ data: todaySales }, { data: todayExpenses }, { data: last7 }, { data: prev7 }, { data: stockRows }] =
     await Promise.all([
@@ -39,7 +40,8 @@ export default async function DashboardPage() {
   const stock = stockRows || [];
   const totalUnits = stock.reduce((s, p) => s + p.stock, 0);
   const stockValue = stock.reduce((s, p) => s + p.stock * p.price, 0);
-  const outOfStockCount = stock.filter((p) => p.stock <= 0).length;
+  const outOfStock = stock.filter((p) => p.stock <= 0);
+  const outOfStockCount = outOfStock.length;
   const lowStockItems = stock
     .filter((p) => p.stock > 0 && p.stock < 5)
     .sort((a, b) => a.stock - b.stock)
@@ -79,6 +81,13 @@ export default async function DashboardPage() {
               <p className="text-sm">
                 <b>Rupture de stock ·</b> {outOfStockCount} produit{outOfStockCount > 1 ? "s" : ""} à 0 unité
               </p>
+              <p className="text-xs text-red mt-1 break-words">
+                {outOfStock.slice(0, 4).map((p) => p.name).join(", ")}
+                {outOfStockCount > 4 ? ` et ${outOfStockCount - 4} autre${outOfStockCount - 4 > 1 ? "s" : ""}` : ""}
+              </p>
+              <Link href="/catalogue" className="inline-block text-xs font-medium text-red underline underline-offset-2 mt-2">
+                Réapprovisionner dans le Catalogue →
+              </Link>
             </Card>
           )}
 
@@ -93,6 +102,9 @@ export default async function DashboardPage() {
                   </div>
                 ))}
               </div>
+              <Link href="/catalogue" className="inline-block text-xs font-medium text-red underline underline-offset-2 mt-2">
+                Réapprovisionner dans le Catalogue →
+              </Link>
             </Card>
           )}
         </>

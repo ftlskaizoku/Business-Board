@@ -15,18 +15,17 @@ export default async function VentePage() {
   const showProducts = hasProducts(business.type);
   const showServices = hasServices(business.type);
 
-  const products = showProducts
-    ? (
-        await supabase
+  // All four lookups are independent, so they run together instead of
+  // products first and everything else after it.
+  const [{ data: products }, { data: services }, { data: slots }, { data: recentSales }] = await Promise.all([
+    showProducts
+      ? supabase
           .from("products")
           .select("*")
           .eq("business_id", business.id)
           .order("category")
           .returns<Product[]>()
-      ).data
-    : [];
-
-  const [{ data: services }, { data: slots }, { data: recentSales }] = await Promise.all([
+      : Promise.resolve({ data: [] as Product[] }),
     showServices
       ? supabase.from("services").select("*").eq("business_id", business.id).returns<ServiceItem[]>()
       : Promise.resolve({ data: [] as ServiceItem[] }),

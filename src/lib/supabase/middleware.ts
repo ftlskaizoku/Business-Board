@@ -23,9 +23,11 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims() checks the session JWT locally (no network round trip to
+  // Supabase Auth on every request) and still refreshes the session when the
+  // token is about to expire.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const user = claimsData?.claims ?? null;
 
   const path = request.nextUrl.pathname;
   const isAuthRoute = path.startsWith("/auth");

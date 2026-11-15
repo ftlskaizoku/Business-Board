@@ -2,7 +2,8 @@ import { requireUserAndBusiness } from "@/lib/data";
 import { fmt } from "@/lib/format";
 import { hasProducts, hasServices } from "@/lib/niches";
 import { Card, EyebrowLabel } from "@/components/ui";
-import { addProduct, deleteProduct, addService, deleteService, setTrackStock } from "../actions";
+import { addProduct, addService, deleteService, setTrackStock } from "../actions";
+import ProductRow from "@/components/ProductRow";
 import type { Product, ServiceItem } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -86,22 +87,7 @@ export default async function CataloguePage() {
               <EyebrowLabel>{g.category}</EyebrowLabel>
               <div className="space-y-2">
                 {g.items.map((p) => (
-                  <div key={p.id} className="flex justify-between items-center gap-2 bg-card border border-line rounded-xl px-3.5 py-2.5">
-                    <div className="min-w-0">
-                      <p className="text-sm truncate">{p.name}</p>
-                      <p className="text-xs text-muted truncate">{p.category} · {fmt(p.price, business.currency)}</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {business.track_stock && (
-                        <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${p.stock < 5 ? "bg-red-soft text-red" : "bg-green-soft text-green"}`}>
-                          {p.stock <= 0 ? "Rupture" : `${p.stock} en stock`}
-                        </span>
-                      )}
-                      <form action={deleteProduct.bind(null, p.id)}>
-                        <button className="text-muted px-1">✕</button>
-                      </form>
-                    </div>
-                  </div>
+                  <ProductRow key={p.id} product={p} currency={business.currency} trackStock={business.track_stock} />
                 ))}
               </div>
             </div>

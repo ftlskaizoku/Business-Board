@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { requireUserAndBusiness } from "@/lib/data";
 import { ADMIN_EMAIL } from "@/lib/admin";
-import { nicheLabel } from "@/lib/niches";
+import { nicheLabel, hasProducts } from "@/lib/niches";
 import { Card, EyebrowLabel } from "@/components/ui";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
 import RestartTourButton from "@/components/RestartTourButton";
+import TrackStockToggle from "@/components/TrackStockToggle";
 import SignOutButton from "@/components/SignOutButton";
 import { updateFullName, updateBusinessName } from "../actions";
 
@@ -15,10 +16,9 @@ export default async function ParametresPage() {
 
   const isAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
   const apkUrl = process.env.NEXT_PUBLIC_APK_URL || null;
-  const memberSince = new Date(profile?.created_at || user.created_at).toLocaleDateString("fr-FR", {
-    month: "long",
-    year: "numeric",
-  });
+  const memberSince = profile?.created_at
+    ? new Date(profile.created_at).toLocaleDateString("fr-FR", { month: "long", year: "numeric" })
+    : "—";
 
   return (
     <div>
@@ -77,14 +77,17 @@ export default async function ParametresPage() {
           <p className="text-xs text-muted">
             Devise <span className="text-ink">{business.currency}</span>
           </p>
-          <p className="text-xs text-muted">
-            Suivi de stock <span className="text-ink">{business.track_stock ? "Activé" : "Désactivé"}</span>
-          </p>
         </div>
-        <p className="text-xs text-muted mt-3">
-          Le suivi de stock se change depuis l&apos;onglet Catalogue.
-        </p>
       </Card>
+
+      {hasProducts(business.type) && (
+        <>
+          <EyebrowLabel>Stock</EyebrowLabel>
+          <Card>
+            <TrackStockToggle initial={business.track_stock} />
+          </Card>
+        </>
+      )}
 
       <EyebrowLabel>Apparence</EyebrowLabel>
       <Card data-tour="parametres-theme">
