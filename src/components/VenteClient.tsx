@@ -85,7 +85,7 @@ export default function VenteClient({
                 <button
                   key={p.id}
                   onClick={() => addToCart(p)}
-                  className="text-left bg-card border border-line rounded-xl p-3 relative"
+                  className="text-left bg-card border border-line rounded-2xl card-surface p-3.5 relative transition-shadow active:shadow-none"
                 >
                   <p className="text-sm font-medium">{p.name}</p>
                   <p className="text-xs text-muted mt-0.5">

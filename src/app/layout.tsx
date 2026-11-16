@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk, IBM_Plex_Mono } from "next/font/google";
 import InstallPrompt from "@/components/InstallPrompt";
 import OfflineBanner from "@/components/OfflineBanner";
+import { cookies } from "next/headers";
+import { cleanTheme, THEME_COOKIE, THEME_IDS } from "@/lib/themes";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
@@ -32,20 +34,29 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // The saved theme is read on the server from a cookie and written straight
+  // onto <html>, so the very first paint already has the right colours and a
+  // reload can never fall back to the default palette.
+  const theme = cleanTheme((await cookies()).get(THEME_COOKIE)?.value);
+  const themeIds = JSON.stringify(THEME_IDS);
   return (
     <html
       lang="fr"
+      data-theme={theme}
+      suppressHydrationWarning
       className={`${inter.variable} ${spaceGrotesk.variable} ${plexMono.variable} h-full antialiased`}
     >
       <head>
-        {/* Applies the saved theme before paint, so there's no flash of the
-            default palette. Kept as a tiny inline script since it has to run
-            before any CSS-var-dependent styles are painted. */}
+        {/* Safety net for people who saved a theme before the cookie existed:
+            it re-applies the localStorage value and writes the cookie. */}
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "try{var t=localStorage.getItem('bb-theme');if(t&&t!=='default'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}",
+              "try{var ok=" + themeIds + ",t=localStorage.getItem('bb-theme'),h=document.documentElement;" +
+              "if(t&&t!=='default'&&ok.indexOf(t)>-1){if(h.getAttribute('data-theme')!==t){h.setAttribute('data-theme',t);}" +
+              "document.cookie='bb-theme='+t+';path=/;max-age=31536000;samesite=lax';}" +
+              "else if(t==='default'){h.removeAttribute('data-theme');document.cookie='bb-theme=default;path=/;max-age=31536000;samesite=lax';}}catch(e){}",
           }}
         />
       </head>

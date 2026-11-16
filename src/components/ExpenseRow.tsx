@@ -38,7 +38,7 @@ export default function ExpenseRow({
 
   if (editing) {
     return (
-      <div className="bg-card border border-line rounded-xl px-3.5 py-3 space-y-2">
+      <div className="bg-card border border-line rounded-2xl card-surface px-3.5 py-3 space-y-2">
         <div className="grid grid-cols-2 gap-2">
           <input
             type="date"
@@ -94,7 +94,7 @@ export default function ExpenseRow({
   }
 
   return (
-    <div className="flex justify-between items-center gap-2 bg-card border border-line rounded-xl px-3.5 py-2.5">
+    <div className="flex justify-between items-center gap-2 bg-card border border-line rounded-2xl card-surface px-3.5 py-2.5">
       <div className="min-w-0">
         <p className="text-sm">{expense.category}</p>
         <p className="text-xs text-muted truncate">

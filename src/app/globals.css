@@ -267,3 +267,109 @@ button:not(:disabled):active {
     transform: none;
   }
 }
+
+/* ───────────── More dark themes ───────────── */
+/* Text on an accent-coloured button. White everywhere, except on the bright
+   accents of the new dark themes where dark text reads better. */
+:root {
+  --color-on-accent: #ffffff;
+}
+.bg-ochre {
+  color: var(--color-on-accent);
+}
+
+[data-theme="minuit"] {
+  --color-cream: #0A0E17;
+  --color-card: #121826;
+  --color-line: #222B3F;
+  --color-ink: #E8EDF7;
+  --color-muted: #8A95AD;
+  --color-ochre: #4C8DFF;
+  --color-ochre-soft: #16294A;
+  --color-indigo: #F2A65A;
+  --color-indigo-soft: #3A2B17;
+  --color-green: #5FD0A0;
+  --color-green-soft: #143528;
+  --color-red: #FF7A7A;
+  --color-red-soft: #3D1C1F;
+  --color-on-accent: #07101F;
+}
+
+[data-theme="foret-nuit"] {
+  --color-cream: #0F1A14;
+  --color-card: #16241C;
+  --color-line: #25382C;
+  --color-ink: #E4F1E8;
+  --color-muted: #8FA797;
+  --color-ochre: #4FC47F;
+  --color-ochre-soft: #1A3A29;
+  --color-indigo: #E9A765;
+  --color-indigo-soft: #3A2C1B;
+  --color-green: #6FD39B;
+  --color-green-soft: #1B3D2A;
+  --color-red: #E88383;
+  --color-red-soft: #3F2325;
+  --color-on-accent: #07140D;
+}
+
+[data-theme="violet-nuit"] {
+  --color-cream: #150F20;
+  --color-card: #1E1630;
+  --color-line: #31254A;
+  --color-ink: #EFE7FB;
+  --color-muted: #A08FC0;
+  --color-ochre: #A67BEA;
+  --color-ochre-soft: #2E2050;
+  --color-indigo: #E8A65E;
+  --color-indigo-soft: #3B2C1B;
+  --color-green: #6FC492;
+  --color-green-soft: #1E3A29;
+  --color-red: #E08080;
+  --color-red-soft: #402323;
+  --color-on-accent: #120A22;
+}
+
+[data-theme="carbone"] {
+  --color-cream: #121212;
+  --color-card: #1C1C1E;
+  --color-line: #2E2E32;
+  --color-ink: #F2F2F3;
+  --color-muted: #9A9AA2;
+  --color-ochre: #2DD4BF;
+  --color-ochre-soft: #10332F;
+  --color-indigo: #F5A65B;
+  --color-indigo-soft: #3A2B17;
+  --color-green: #6FC492;
+  --color-green-soft: #1E3A29;
+  --color-red: #E88383;
+  --color-red-soft: #402323;
+  --color-on-accent: #061B18;
+}
+
+[data-theme="braise"] {
+  --color-cream: #1C1210;
+  --color-card: #271A17;
+  --color-line: #402A25;
+  --color-ink: #F7E9E4;
+  --color-muted: #B39489;
+  --color-ochre: #FF7A59;
+  --color-ochre-soft: #4A2418;
+  --color-indigo: #7FA0FF;
+  --color-indigo-soft: #1F2A4D;
+  --color-green: #6FC492;
+  --color-green-soft: #1E3A29;
+  --color-red: #F08A8A;
+  --color-red-soft: #432526;
+  --color-on-accent: #2A0F08;
+}
+
+/* Tell the browser the page is dark, so scrollbars and form controls match. */
+[data-theme="sombre"],
+[data-theme="nuit-indigo"],
+[data-theme="minuit"],
+[data-theme="foret-nuit"],
+[data-theme="violet-nuit"],
+[data-theme="carbone"],
+[data-theme="braise"] {
+  color-scheme: dark;
+}

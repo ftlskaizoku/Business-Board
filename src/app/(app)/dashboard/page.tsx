@@ -12,7 +12,7 @@ export default async function DashboardPage() {
   const today = todayKey();
   const showStock = hasProducts(business.type) && business.track_stock;
 
-  const [{ data: todaySales }, { data: todayExpenses }, { data: last7 }, { data: prev7 }, { data: stockRows }] =
+  const [{ data: todaySales }, { data: todayExpenses }, { data: last7 }, { data: prev7 }, { data: stockRows }, { data: recentSales }] =
     await Promise.all([
       supabase.from("sales").select("total").eq("business_id", business.id).eq("sale_date", today),
       supabase.from("expenses").select("amount").eq("business_id", business.id).eq("expense_date", today),
@@ -26,6 +26,13 @@ export default async function DashboardPage() {
       showStock
         ? supabase.from("products").select("name, price, stock").eq("business_id", business.id)
         : Promise.resolve({ data: [] as { name: string; price: number; stock: number }[] }),
+      supabase
+        .from("sales")
+        .select("id, sale_date, total, sale_items(name, qty)")
+        .eq("business_id", business.id)
+        .order("sale_date", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(4),
     ]);
 
   const sumTotal = (rows: { total: number }[] | null) => (rows || []).reduce((s, r) => s + r.total, 0);
@@ -87,6 +94,21 @@ export default async function DashboardPage() {
         <Metric label="Dépenses du jour" value={fmt(expensesToday, business.currency)} icon={<Icon name="expense" />} />
       </div>
 
+      <div className="grid grid-cols-2 gap-3 mt-3">
+        <Link
+          href="/vente"
+          className="bg-ochre rounded-2xl py-3.5 text-sm font-medium text-center card-surface active:scale-[0.98] transition-transform"
+        >
+          ＋ Nouvelle vente
+        </Link>
+        <Link
+          href="/depenses"
+          className="bg-card border border-line rounded-2xl py-3.5 text-sm font-medium text-center card-surface active:scale-[0.98] transition-transform"
+        >
+          Nouvelle dépense
+        </Link>
+      </div>
+
       <EyebrowLabel>Tendance 7 jours</EyebrowLabel>
       <Card>
         <div className="flex items-start justify-between gap-3 mb-2">
@@ -103,6 +125,37 @@ export default async function DashboardPage() {
         <p className="text-[11px] text-muted mt-1">Touchez la courbe pour voir le détail d&apos;un jour. Comparé à la semaine précédente.</p>
       </Card>
 
+      <div className="flex items-center justify-between mt-7 mb-2.5">
+        <p className="text-xs uppercase tracking-widest text-muted font-medium">Dernières ventes</p>
+        <Link href="/vente" className="text-xs font-medium text-ochre">
+          Voir tout →
+        </Link>
+      </div>
+      {!recentSales || recentSales.length === 0 ? (
+        <Card>
+          <EmptyNote>Aucune vente pour l&apos;instant. Enregistrez la première depuis l&apos;onglet Vente.</EmptyNote>
+        </Card>
+      ) : (
+        <Card className="p-0! divide-y divide-line">
+          {recentSales.map((sale: { id: string; sale_date: string; total: number; sale_items: { name: string; qty: number }[] }) => {
+            const first = sale.sale_items[0];
+            const more = sale.sale_items.length - 1;
+            return (
+              <div key={sale.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-sm truncate">
+                    {first ? `${first.name} ×${first.qty}` : "Vente"}
+                    {more > 0 && <span className="text-muted"> +{more}</span>}
+                  </p>
+                  <p className="text-xs text-muted">{sale.sale_date === today ? "Aujourd'hui" : sale.sale_date}</p>
+                </div>
+                <span className="font-mono text-sm text-green shrink-0">+{fmt(sale.total, business.currency)}</span>
+              </div>
+            );
+          })}
+        </Card>
+      )}
+
       {showStock && (
         <>
           <EyebrowLabel>Suivi de stock</EyebrowLabel>
@@ -111,33 +164,45 @@ export default async function DashboardPage() {
             <Metric label="Valeur du stock" value={fmt(stockValue, business.currency)} icon={<Icon name="stock" />} />
           </div>
 
-          {outOfStockCount > 0 && (
-            <Card className="mt-3 border-red bg-red-soft">
-              <p className="text-sm">
-                <b>Rupture de stock ·</b> {outOfStockCount} produit{outOfStockCount > 1 ? "s" : ""} à 0 unité
-              </p>
-              <p className="text-xs text-red mt-1 break-words">
-                {outOfStock.slice(0, 4).map((p) => p.name).join(", ")}
-                {outOfStockCount > 4 ? ` et ${outOfStockCount - 4} autre${outOfStockCount - 4 > 1 ? "s" : ""}` : ""}
-              </p>
-              <Link href="/catalogue" className="inline-block text-xs font-medium text-red underline underline-offset-2 mt-2">
-                Réapprovisionner dans le Catalogue →
-              </Link>
-            </Card>
-          )}
-
-          {lowStockItems.length > 0 && (
-            <Card className="mt-3 border-red bg-red-soft">
-              <p className="text-sm font-medium mb-2">Stock faible</p>
-              <div className="space-y-1">
-                {lowStockItems.map((p) => (
-                  <div key={p.name} className="flex justify-between gap-2 text-sm">
-                    <span className="min-w-0 truncate">{p.name}</span>
-                    <span className="text-red font-mono shrink-0">{p.stock} restant{p.stock > 1 ? "s" : ""}</span>
+          {(outOfStockCount > 0 || lowStockItems.length > 0) && (
+            <Card className="mt-3">
+              {outOfStockCount > 0 && (
+                <div className={lowStockItems.length > 0 ? "mb-4" : ""}>
+                  <p className="text-sm font-medium mb-2">
+                    Rupture de stock <span className="text-red">· {outOfStockCount} produit{outOfStockCount > 1 ? "s" : ""} à 0 unité</span>
+                  </p>
+                  <div className="space-y-2">
+                    {outOfStock.slice(0, 4).map((p) => (
+                      <div key={p.name} className="flex items-center justify-between gap-2 text-sm">
+                        <span className="min-w-0 truncate">{p.name}</span>
+                        <span className="shrink-0 rounded-full bg-red-soft text-red text-[11px] font-medium px-2 py-0.5">Rupture</span>
+                      </div>
+                    ))}
+                    {outOfStockCount > 4 && (
+                      <p className="text-xs text-muted">et {outOfStockCount - 4} autre{outOfStockCount - 4 > 1 ? "s" : ""}</p>
+                    )}
                   </div>
-                ))}
-              </div>
-              <Link href="/catalogue" className="inline-block text-xs font-medium text-red underline underline-offset-2 mt-2">
+                </div>
+              )}
+              {lowStockItems.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium mb-2">Stock faible</p>
+                  <div className="space-y-2.5">
+                    {lowStockItems.map((p) => (
+                      <div key={p.name}>
+                        <div className="flex justify-between gap-2 text-sm mb-1">
+                          <span className="min-w-0 truncate">{p.name}</span>
+                          <span className="text-red font-mono text-xs shrink-0">{p.stock} restant{p.stock > 1 ? "s" : ""}</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-red-soft overflow-hidden">
+                          <div className="h-full rounded-full bg-red bar-grow" style={{ width: `${Math.max(8, (p.stock / 5) * 100)}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <Link href="/catalogue" className="inline-block text-xs font-medium text-ochre mt-3">
                 Réapprovisionner dans le Catalogue →
               </Link>
             </Card>

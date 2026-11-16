@@ -32,7 +32,7 @@ export default function ProductRow({
   }
 
   return (
-    <div className="bg-card border border-line rounded-xl px-3.5 py-2.5">
+    <div className="bg-card border border-line rounded-2xl card-surface px-3.5 py-2.5">
       <div className="flex justify-between items-center gap-2">
         <div className="min-w-0">
           <p className="text-sm truncate">{product.name}</p>
