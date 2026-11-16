@@ -23,7 +23,7 @@ export default async function ParametresPage() {
   return (
     <div>
       <p className="text-xs uppercase tracking-widest text-muted mb-1">Paramètres</p>
-      <h1 className="font-display text-2xl font-semibold mb-5">Votre compte</h1>
+      <h1 className="font-display text-[26px] leading-tight font-semibold mb-5">Votre compte</h1>
 
       <EyebrowLabel>Informations personnelles</EyebrowLabel>
       <Card>

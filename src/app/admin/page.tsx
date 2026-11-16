@@ -62,7 +62,7 @@ export default async function AdminPage() {
           </Link>
         </div>
       </div>
-      <h1 className="font-display text-2xl font-semibold mb-5">Vue d&apos;ensemble</h1>
+      <h1 className="font-display text-[26px] leading-tight font-semibold mb-5">Vue d&apos;ensemble</h1>
 
       <div className="grid grid-cols-2 gap-3 mb-6">
         <Card>

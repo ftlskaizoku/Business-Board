@@ -2,7 +2,9 @@ import Link from "next/link";
 import { requireUserAndBusiness } from "@/lib/data";
 import { hasServices } from "@/lib/niches";
 import { fmt, fmtK, daysAgoKey } from "@/lib/format";
-import { Metric, Card, EyebrowLabel, EmptyNote } from "@/components/ui";
+import { Metric, Card, EyebrowLabel, EmptyNote, PageHeading, Icon } from "@/components/ui";
+import { TrendChart, type TrendPoint } from "@/components/charts";
+import Donut, { sliceColor } from "@/components/Donut";
 import MonthSelect from "@/components/MonthSelect";
 
 export const dynamic = "force-dynamic";
@@ -68,8 +70,7 @@ export default async function StatsPage({
   if (months.length === 0) {
     return (
       <div>
-        <p className="text-xs uppercase tracking-widest text-muted mb-1">Statistiques</p>
-        <h1 className="font-display text-2xl font-semibold mb-5">{business.name}</h1>
+        <PageHeading eyebrow="Statistiques" title={business.name} />
         <EmptyNote>
           Pas encore d&apos;historique. Les statistiques apparaîtront dès vos premières ventes et dépenses.
         </EmptyNote>
@@ -137,7 +138,12 @@ export default async function StatsPage({
     const key = daysAgoKey(i);
     last14.push({ date: key, ...(byDate[key] || { sales: 0, expenses: 0, items: 0 }) });
   }
-  const maxDayVal = Math.max(1, ...last14.map((d) => Math.max(d.sales, d.expenses)));
+  const trendPoints: TrendPoint[] = last14.map((d) => ({
+    label: String(Number(d.date.slice(8, 10))),
+    title: new Date(d.date + "T00:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" }),
+    a: d.sales,
+    b: d.expenses,
+  }));
 
   // top items this month
   const itemCounts: Record<string, { qty: number; revenue: number }> = {};
@@ -164,22 +170,28 @@ export default async function StatsPage({
   const expenseBreakdown = Object.entries(expByCat)
     .map(([category, amount]) => ({ category, amount }))
     .sort((a, b) => b.amount - a.amount);
-  const maxExpCat = expenseBreakdown[0]?.amount || 1;
+  // Top 4 names get their own slice; everything else is grouped as "Autres".
+  const expenseSlices = (() => {
+    const top = expenseBreakdown.slice(0, 4).map((e) => ({ name: e.category, value: e.amount }));
+    const rest = expenseBreakdown.slice(4).reduce((n, e) => n + e.amount, 0);
+    return rest > 0 ? [...top, { name: "Autres", value: rest }] : top;
+  })();
 
   return (
     <div>
-      <p className="text-xs uppercase tracking-widest text-muted mb-1">Statistiques</p>
-      <h1 className="font-display text-2xl font-semibold mb-5">{business.name}</h1>
+      <PageHeading eyebrow="Statistiques" title={business.name} />
 
       <div className="grid grid-cols-2 gap-3">
         <Metric
           label="Ventes du mois"
+          icon={<Icon name="sales" />}
           value={fmt(monthTotals.sales, business.currency)}
           delta={salesPct !== null ? `${salesPct >= 0 ? "+" : ""}${salesPct}%` : undefined}
           tone={salesPct !== null ? (salesPct >= 0 ? "good" : "bad") : "default"}
         />
         <Metric
           label="Dépenses du mois"
+          icon={<Icon name="expense" />}
           value={fmt(monthTotals.expenses, business.currency)}
           delta={expensesPct !== null ? `${expensesPct >= 0 ? "+" : ""}${expensesPct}%` : undefined}
           tone={expensesPct !== null ? (expensesPct <= 0 ? "good" : "bad") : "default"}
@@ -204,7 +216,7 @@ export default async function StatsPage({
         <MonthSelect months={months} current={month} />
       </div>
 
-      <div className="border border-line rounded-xl bg-card p-2.5" data-tour="stats-calendar">
+      <div className="border border-line rounded-[20px] card-surface bg-card p-3" data-tour="stats-calendar">
         <div className="grid grid-cols-7 gap-1 mb-1">
           {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
             <span key={i} className="text-center text-[11px] text-muted">
@@ -224,7 +236,7 @@ export default async function StatsPage({
               : "bg-red-soft text-red";
             const isActive = c.key === activeKey ? "ring-2 ring-current" : "";
             const content = (
-              <div className={`h-[46px] rounded-lg flex flex-col justify-between items-start p-1 ${cls} ${isActive}`}>
+              <div className={`h-[46px] rounded-xl flex flex-col justify-between items-start p-1 ${cls} ${isActive}`}>
                 <span className="text-[10px] opacity-75">{c.day}</span>
                 {hasData && <span className="text-[11px] font-mono font-medium">{fmtK(profit)}</span>}
               </div>
@@ -271,20 +283,11 @@ export default async function StatsPage({
 
       <EyebrowLabel>Ventes et dépenses, 14 derniers jours</EyebrowLabel>
       <Card>
-        <div className="flex items-end gap-1.5 h-[100px]">
-          {last14.map((d) => (
-            <div key={d.date} className="flex-1 flex flex-col items-center gap-1">
-              <div className="flex items-end gap-0.5 h-[80px]">
-                <div className="w-1.5 rounded-t-sm bg-green" style={{ height: `${Math.round((d.sales / maxDayVal) * 80)}px` }} />
-                <div className="w-1.5 rounded-t-sm bg-red" style={{ height: `${Math.round((d.expenses / maxDayVal) * 80)}px` }} />
-              </div>
-              <span className="text-[9px] text-muted">{Number(d.date.slice(8, 10))}</span>
-            </div>
-          ))}
-        </div>
-        <div className="flex gap-4 mt-3 pt-2 border-t border-line text-[11px] text-muted">
-          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-green inline-block" />Ventes</span>
-          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-red inline-block" />Dépenses</span>
+        <TrendChart points={trendPoints} currency={business.currency} aLabel="Ventes" bLabel="Dépenses" />
+        <div className="flex gap-4 mt-2 pt-3 border-t border-line text-[11px] text-muted">
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-green inline-block" />Ventes</span>
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red inline-block" />Dépenses</span>
+          <span className="ml-auto">Touchez la courbe</span>
         </div>
       </Card>
 
@@ -301,8 +304,8 @@ export default async function StatsPage({
                 </span>
                 <span className="font-mono shrink-0">{fmt(t.revenue, business.currency)}</span>
               </div>
-              <div className="h-[5px] rounded-full bg-ochre-soft">
-                <div className="h-full rounded-full bg-ochre" style={{ width: `${Math.round((t.revenue / maxItemRev) * 100)}%` }} />
+              <div className="h-2 rounded-full bg-ochre-soft overflow-hidden">
+                <div className="h-full rounded-full bg-ochre bar-grow" style={{ width: `${Math.round((t.revenue / maxItemRev) * 100)}%` }} />
               </div>
             </div>
           ))
@@ -314,17 +317,26 @@ export default async function StatsPage({
         {expenseBreakdown.length === 0 ? (
           <EmptyNote>Aucune dépense ce mois-ci.</EmptyNote>
         ) : (
-          expenseBreakdown.map((e, i) => (
-            <div key={e.category} className={i < expenseBreakdown.length - 1 ? "mb-3" : ""}>
-              <div className="flex justify-between gap-2 text-sm mb-1">
-                <span className="min-w-0 truncate">{e.category}</span>
-                <span className="font-mono shrink-0">{fmt(e.amount, business.currency)}</span>
-              </div>
-              <div className="h-[5px] rounded-full bg-indigo-soft">
-                <div className="h-full rounded-full bg-indigo" style={{ width: `${Math.round((e.amount / maxExpCat) * 100)}%` }} />
-              </div>
+          <div className="flex items-center gap-4">
+            <Donut
+              slices={expenseSlices}
+              centerLabel="Total"
+              centerValue={fmt(monthTotals.expenses, business.currency)}
+            />
+            <div className="flex-1 min-w-0 space-y-2">
+              {expenseSlices.map((e, i) => (
+                <div key={e.name} className="flex items-center justify-between gap-2 text-sm">
+                  <span className="min-w-0 flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: sliceColor(i) }} />
+                    <span className="truncate">{e.name}</span>
+                  </span>
+                  <span className="font-mono text-xs shrink-0 text-muted">
+                    {Math.round((e.value / (monthTotals.expenses || 1)) * 100)}%
+                  </span>
+                </div>
+              ))}
             </div>
-          ))
+          </div>
         )}
       </Card>
     </div>

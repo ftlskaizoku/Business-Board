@@ -30,7 +30,7 @@ export default async function CataloguePage() {
   return (
     <div>
       <p className="text-xs uppercase tracking-widest text-muted mb-1">Catalogue</p>
-      <h1 className="font-display text-2xl font-semibold mb-5">
+      <h1 className="font-display text-[26px] leading-tight font-semibold mb-5">
         {(products?.length ?? 0)} produits · {(services?.length ?? 0)} services
       </h1>
 

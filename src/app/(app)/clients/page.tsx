@@ -16,7 +16,7 @@ export default async function ClientsPage() {
   return (
     <div>
       <p className="text-xs uppercase tracking-widest text-muted mb-1">Clients</p>
-      <h1 className="font-display text-2xl font-semibold mb-5">
+      <h1 className="font-display text-[26px] leading-tight font-semibold mb-5">
         {customers?.length ?? 0} client{(customers?.length ?? 0) > 1 ? "s" : ""} enregistré
         {(customers?.length ?? 0) > 1 ? "s" : ""}
       </h1>

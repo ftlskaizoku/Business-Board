@@ -2,7 +2,8 @@ import { requireUserAndBusiness } from "@/lib/data";
 import { fmt, todayKey, daysAgoKey } from "@/lib/format";
 import { hasProducts } from "@/lib/niches";
 import Link from "next/link";
-import { Metric, Card, EmptyNote, EyebrowLabel } from "@/components/ui";
+import { Metric, Card, EmptyNote, EyebrowLabel, PageHeading, DeltaPill, Icon } from "@/components/ui";
+import { TrendChart, type TrendPoint } from "@/components/charts";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,7 @@ export default async function DashboardPage() {
     await Promise.all([
       supabase.from("sales").select("total").eq("business_id", business.id).eq("sale_date", today),
       supabase.from("expenses").select("amount").eq("business_id", business.id).eq("expense_date", today),
-      supabase.from("sales").select("total").eq("business_id", business.id).gte("sale_date", daysAgoKey(6)),
+      supabase.from("sales").select("sale_date, total").eq("business_id", business.id).gte("sale_date", daysAgoKey(6)),
       supabase
         .from("sales")
         .select("total")
@@ -37,6 +38,22 @@ export default async function DashboardPage() {
   const prev7Sum = sumTotal(prev7);
   const weekDelta = prev7Sum ? Math.round(((last7Sum - prev7Sum) / prev7Sum) * 100) : 0;
 
+  // Per-day sales for the last 7 days (oldest → today) for the trend chart.
+  const dayTotals: Record<string, number> = {};
+  (last7 || []).forEach((r: { sale_date: string; total: number }) => {
+    dayTotals[r.sale_date] = (dayTotals[r.sale_date] || 0) + r.total;
+  });
+  const trendPoints: TrendPoint[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const key = daysAgoKey(i);
+    const dt = new Date(key + "T00:00:00");
+    trendPoints.push({
+      label: String(dt.getDate()),
+      title: dt.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" }),
+      a: dayTotals[key] || 0,
+    });
+  }
+
   const stock = stockRows || [];
   const totalUnits = stock.reduce((s, p) => s + p.stock, 0);
   const stockValue = stock.reduce((s, p) => s + p.stock * p.price, 0);
@@ -49,31 +66,49 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <p className="text-xs uppercase tracking-widest text-muted mb-1">Aujourd&apos;hui</p>
-      <h1 className="font-display text-2xl font-semibold mb-5">Bonjour</h1>
+      <PageHeading eyebrow="Aujourd'hui" title="Bonjour" />
 
       <div className="grid grid-cols-2 gap-3" data-tour="dashboard-metrics">
-        <Metric label="Ventes du jour" value={fmt(salesToday, business.currency)} />
-        <Metric label="Dépenses du jour" value={fmt(expensesToday, business.currency)} />
-        <Metric
-          label="Profit net"
-          value={fmt(profit, business.currency)}
-          tone={profit >= 0 ? "good" : "bad"}
-        />
-        <Metric
-          label="Tendance 7 jours"
-          value={fmt(last7Sum, business.currency)}
-          delta={`${weekDelta >= 0 ? "+" : ""}${weekDelta}%`}
-          tone={weekDelta >= 0 ? "good" : "bad"}
-        />
+        <Card className={`col-span-2 ${profit >= 0 ? "bg-green-soft" : "bg-red-soft"}`}>
+          <div className="flex items-center gap-2 mb-1">
+            <span
+              className={`w-7 h-7 rounded-full bg-card flex items-center justify-center ${profit >= 0 ? "text-green" : "text-red"}`}
+            >
+              <Icon name="profit" />
+            </span>
+            <p className={`text-sm ${profit >= 0 ? "text-green" : "text-red"}`}>Profit net</p>
+          </div>
+          <p className={`font-mono text-3xl font-medium break-words ${profit >= 0 ? "text-green" : "text-red"}`}>
+            {fmt(profit, business.currency)}
+          </p>
+          <p className="text-xs text-muted mt-1">Ventes moins dépenses d&apos;aujourd&apos;hui</p>
+        </Card>
+        <Metric label="Ventes du jour" value={fmt(salesToday, business.currency)} icon={<Icon name="sales" />} />
+        <Metric label="Dépenses du jour" value={fmt(expensesToday, business.currency)} icon={<Icon name="expense" />} />
       </div>
+
+      <EyebrowLabel>Tendance 7 jours</EyebrowLabel>
+      <Card>
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <div className="min-w-0">
+            <p className="text-xs text-muted">Ventes sur la semaine</p>
+            <p className="font-mono text-xl font-medium break-words">{fmt(last7Sum, business.currency)}</p>
+          </div>
+          <DeltaPill
+            value={`${weekDelta >= 0 ? "+" : ""}${weekDelta}%`}
+            tone={weekDelta >= 0 ? "good" : "bad"}
+          />
+        </div>
+        <TrendChart points={trendPoints} currency={business.currency} aLabel="Ventes" />
+        <p className="text-[11px] text-muted mt-1">Touchez la courbe pour voir le détail d&apos;un jour. Comparé à la semaine précédente.</p>
+      </Card>
 
       {showStock && (
         <>
           <EyebrowLabel>Suivi de stock</EyebrowLabel>
           <div className="grid grid-cols-2 gap-3">
-            <Metric label="Unités en stock" value={String(totalUnits)} />
-            <Metric label="Valeur du stock" value={fmt(stockValue, business.currency)} />
+            <Metric label="Unités en stock" value={String(totalUnits)} icon={<Icon name="box" />} />
+            <Metric label="Valeur du stock" value={fmt(stockValue, business.currency)} icon={<Icon name="stock" />} />
           </div>
 
           {outOfStockCount > 0 && (

@@ -52,7 +52,7 @@ export default async function VentePage() {
       <p className="text-xs uppercase tracking-widest text-muted mb-1">
         {showProducts ? "Nouvelle vente" : "Rendez-vous"}
       </p>
-      <h1 className="font-display text-2xl font-semibold mb-5">{business.name}</h1>
+      <h1 className="font-display text-[26px] leading-tight font-semibold mb-5">{business.name}</h1>
 
       {showProducts && (products?.length ?? 0) > 0 && (
         <VenteClient products={products!} currency={business.currency} trackStock={business.track_stock} />
