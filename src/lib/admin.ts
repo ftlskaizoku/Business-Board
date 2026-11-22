@@ -6,7 +6,7 @@ export const ADMIN_EMAIL = "khalifadylla@gmail.com";
 
 export async function requireAdmin() {
   const { supabase, user } = await requireUser();
-  if ((user.email || "").toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+  if ((user.email || "").trim().toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
     redirect("/dashboard");
   }
   return { supabase, user };
