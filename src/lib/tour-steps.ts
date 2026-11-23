@@ -39,7 +39,7 @@ export function buildTourSteps(opts: {
       title: servicesOnly ? "Rendez-vous" : "Enregistrer une vente",
       body: servicesOnly
         ? "Choisissez un créneau pour prendre un rendez-vous — c'est enregistré immédiatement."
-        : "Choisissez un produit, puis la quantité vendue. Plus bas sur cette page, vous pouvez aussi rattraper une vente d'un jour passé.",
+        : "Choisissez un produit, puis la quantité vendue. Dans l'onglet Historique, vous retrouvez vos ventes et pouvez rattraper un jour passé.",
     },
     {
       id: "catalogue",

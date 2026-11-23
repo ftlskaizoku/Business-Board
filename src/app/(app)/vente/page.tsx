@@ -5,6 +5,7 @@ import VenteClient from "@/components/VenteClient";
 import RdvClient from "@/components/RdvClient";
 import ManualSaleForm from "@/components/ManualSaleForm";
 import SaleRow from "@/components/SaleRow";
+import VenteTabs, { type VenteTab } from "@/components/VenteTabs";
 import { Card, EmptyState, Icon, PageHeader, SectionHeader } from "@/components/ui";
 import type { Product, ServiceItem, AppointmentSlot } from "@/lib/types";
 
@@ -42,20 +43,16 @@ export default async function VentePage() {
   ]);
 
   const days = groupByDay(recentSales || [], (s) => s.sale_date);
+  const today = todayKey();
+  const todaySales = (recentSales || []).filter((s) => s.sale_date === today);
+  const todayTotal = todaySales.reduce((n, s) => n + s.total, 0);
 
-  return (
-    <div>
-      <PageHeader
-        eyebrow={showProducts ? "Nouvelle vente" : "Rendez-vous"}
-        title={showProducts ? "Encaisser" : "Agenda du jour"}
-        subtitle={business.name}
-      />
-
-      {showProducts && (products?.length ?? 0) > 0 && (
+  const caisse = (
+    <>
+      {(products?.length ?? 0) > 0 ? (
         <VenteClient products={products!} currency={business.currency} trackStock={business.track_stock} />
-      )}
-      {showProducts && (products?.length ?? 0) === 0 && (
-        <Card className="mb-6">
+      ) : (
+        <Card>
           <EmptyState
             icon={<Icon name="box" size={20} />}
             title="Aucun produit au catalogue"
@@ -63,12 +60,15 @@ export default async function VentePage() {
           />
         </Card>
       )}
+    </>
+  );
 
-      {showServices && <RdvClient services={services || []} takenSlots={slots || []} currency={business.currency} />}
+  const agenda = <RdvClient services={services || []} takenSlots={slots || []} currency={business.currency} />;
 
+  const historique = (
+    <>
       <ManualSaleForm currency={business.currency} />
-
-      <SectionHeader title="Ventes récentes" aside={recentSales?.length ? `${recentSales.length} dernières` : undefined} />
+      <SectionHeader title="Ventes récentes" aside={recentSales?.length ? `${recentSales.length} dernières` : undefined} className="!mt-6" />
       {days.length === 0 ? (
         <Card>
           <EmptyState icon={<Icon name="sales" size={20} />} title="Aucune vente enregistrée" />
@@ -92,6 +92,31 @@ export default async function VentePage() {
           ))}
         </div>
       )}
+    </>
+  );
+
+  const tabs: VenteTab[] = [];
+  if (showProducts) tabs.push({ id: "caisse", label: "Encaisser", panel: caisse });
+  if (showServices) tabs.push({ id: "agenda", label: "Rendez-vous", panel: agenda });
+  tabs.push({ id: "historique", label: "Historique", panel: historique });
+
+  return (
+    <div>
+      <PageHeader
+        eyebrow={showProducts ? "Vente" : "Rendez-vous"}
+        title={showProducts ? "Encaisser" : "Agenda du jour"}
+        subtitle={
+          todaySales.length > 0 ? (
+            <>
+              Aujourd&apos;hui : <span className="font-mono text-ink">{fmt(todayTotal, business.currency)}</span> ·{" "}
+              {todaySales.length} vente{todaySales.length > 1 ? "s" : ""}
+            </>
+          ) : (
+            business.name
+          )
+        }
+      />
+      <VenteTabs tabs={tabs} />
     </div>
   );
 }

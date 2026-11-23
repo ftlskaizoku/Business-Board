@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { fmt } from "@/lib/format";
 import { checkout } from "@/app/(app)/actions";
 import { primaryBtn } from "@/components/ui";
@@ -62,6 +62,14 @@ export default function VenteClient({
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<string | null>(null);
+
+  const categories = useMemo(() => [...new Set(products.map((p) => p.category))], [products]);
+  const needle = query.trim().toLowerCase();
+  const visible = products.filter(
+    (p) => (!category || p.category === category) && (!needle || p.name.toLowerCase().includes(needle))
+  );
 
   const total = Object.entries(cart).reduce((sum, [id, qty]) => {
     const p = products.find((x) => x.id === id);
@@ -93,10 +101,9 @@ export default function VenteClient({
     });
   }
 
-  const groups = [...new Set(products.map((p) => p.category))].map((category) => ({
-    category,
-    items: products.filter((p) => p.category === category),
-  }));
+  const groups = categories
+    .map((c) => ({ category: c, items: visible.filter((p) => p.category === c) }))
+    .filter((g) => g.items.length > 0);
 
   const cartLines = Object.entries(cart)
     .map(([productId, qty]) => {
@@ -107,6 +114,47 @@ export default function VenteClient({
 
   return (
     <div className={itemCount > 0 ? "pb-24" : ""} data-tour="vente-grid">
+      {products.length > 6 && (
+        <div className="relative mb-3">
+          <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="M20 20l-3.5-3.5" />
+          </svg>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Chercher un produit…"
+            aria-label="Chercher un produit"
+            className="field !pl-10"
+          />
+        </div>
+      )}
+
+      {categories.length > 1 && (
+        <div className="-mx-5 px-5 overflow-x-auto no-scrollbar mb-4">
+          <div className="flex gap-2 w-max">
+            {[null, ...categories].map((c) => (
+              <button
+                key={c ?? "all"}
+                type="button"
+                onClick={() => setCategory(c)}
+                aria-pressed={category === c}
+                className={`shrink-0 h-9 px-3.5 rounded-full text-[13px] font-medium border transition-colors ${
+                  category === c ? "bg-ink text-cream border-ink" : "bg-card text-muted border-line"
+                }`}
+              >
+                {c ?? "Tout"}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {groups.length === 0 && (
+        <p className="text-sm text-muted text-center py-10">Aucun produit ne correspond.</p>
+      )}
+
       {groups.map((g) => (
         <section key={g.category} className="mb-6">
           <h2 className="text-xs font-medium uppercase tracking-wider text-muted mb-2.5 px-1">{g.category}</h2>
