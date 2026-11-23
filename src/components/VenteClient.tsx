@@ -64,6 +64,7 @@ export default function VenteClient({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const categories = useMemo(() => [...new Set(products.map((p) => p.category))], [products]);
   const needle = query.trim().toLowerCase();
@@ -114,58 +115,66 @@ export default function VenteClient({
 
   return (
     <div className={itemCount > 0 ? "pb-24" : ""} data-tour="vente-grid">
-      {products.length > 6 && (
-        <div className="relative mb-3">
-          <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-            <circle cx="11" cy="11" r="7" />
-            <path d="M20 20l-3.5-3.5" />
-          </svg>
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Chercher un produit…"
-            aria-label="Chercher un produit"
-            className="field !pl-10"
-          />
-        </div>
-      )}
-
-      {categories.length > 1 && (
-        <div className="-mx-5 px-5 overflow-x-auto no-scrollbar mb-4">
-          <div className="flex gap-2 w-max">
-            {[null, ...categories].map((c) => (
-              <button
-                key={c ?? "all"}
-                type="button"
-                onClick={() => setCategory(c)}
-                aria-pressed={category === c}
-                className={`shrink-0 h-9 px-3.5 rounded-full text-[13px] font-medium border transition-colors ${
-                  category === c ? "bg-ink text-cream border-ink" : "bg-card text-muted border-line"
-                }`}
-              >
-                {c ?? "Tout"}
-              </button>
-            ))}
+      {(products.length > 6 || categories.length > 1) && (
+        <div className="flex gap-2 mb-3">
+          <div className="relative flex-1 min-w-0">
+            <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M20 20l-3.5-3.5" />
+            </svg>
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Chercher un produit…"
+              aria-label="Chercher un produit"
+              className="field !pl-10"
+            />
           </div>
+          {categories.length > 1 && (
+            <button
+              type="button"
+              onClick={() => setFilterOpen(true)}
+              aria-label="Filtrer par catégorie"
+              className={`relative shrink-0 w-11 h-11 rounded-[14px] border flex items-center justify-center transition-colors ${
+                category ? "bg-ochre border-ochre" : "bg-card border-line text-ink"
+              }`}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M4 6h16M7 12h10M10 18h4" />
+              </svg>
+            </button>
+          )}
         </div>
       )}
 
-      {groups.length === 0 && (
-        <p className="text-sm text-muted text-center py-10">Aucun produit ne correspond.</p>
+      {category && (
+        <button
+          type="button"
+          onClick={() => setCategory(null)}
+          className="row-in mb-3 inline-flex items-center gap-1.5 h-8 pl-3 pr-2.5 rounded-full bg-ochre-soft text-ochre text-xs font-medium max-w-full"
+        >
+          <span className="truncate">{category}</span>
+          <span aria-hidden>✕</span>
+          <span className="sr-only">Retirer le filtre</span>
+        </button>
       )}
+
+      {groups.length === 0 && <p className="text-sm text-muted text-center py-10">Aucun produit ne correspond.</p>}
 
       {groups.map((g) => (
-        <section key={g.category} className="mb-6">
-          <h2 className="text-xs font-medium uppercase tracking-wider text-muted mb-2.5 px-1">{g.category}</h2>
-          <div className="grid grid-cols-2 gap-2.5">
+        <section key={g.category} className="mb-5">
+          {(categories.length > 1 && !category) && (
+            <h2 className="text-xs font-medium uppercase tracking-wider text-muted mb-2 px-1">{g.category}</h2>
+          )}
+          <div className="space-y-2">
             {g.items.map((p) => {
               const inCart = cart[p.id] || 0;
               const soldOut = trackStock && p.stock <= 0;
               return (
                 <div
                   key={p.id}
-                  className={`relative bg-card border rounded-2xl card-surface min-w-0 transition-colors ${
+                  className={`flex items-center gap-2 bg-card border rounded-2xl card-surface pl-3.5 pr-2.5 py-2.5 min-w-0 transition-colors ${
                     inCart > 0 ? "border-ochre" : "border-line"
                   } ${soldOut ? "opacity-60" : ""}`}
                 >
@@ -173,20 +182,31 @@ export default function VenteClient({
                     type="button"
                     onClick={() => setQty(p.id, inCart + 1)}
                     disabled={soldOut}
-                    className="w-full text-left p-3.5 pb-3 min-w-0"
+                    className="flex-1 min-w-0 text-left py-0.5"
                   >
-                    <p className="text-sm font-medium leading-snug line-clamp-2 break-words pr-6">{p.name}</p>
-                    <p className="font-mono text-[13px] mt-1.5">{fmt(p.price, currency)}</p>
-                    {trackStock && (
-                      <p className={`text-[11px] mt-0.5 ${p.stock < 5 ? "text-red" : "text-muted"}`}>
-                        {soldOut ? "Rupture" : `${p.stock} en stock`}
-                      </p>
-                    )}
-                  </button>
-                  {inCart > 0 && (
-                    <span className="absolute top-2.5 right-2.5 min-w-6 h-6 px-1.5 rounded-full bg-ochre text-[11px] font-mono font-medium flex items-center justify-center">
-                      {inCart}
+                    <span className="block text-sm font-medium leading-snug line-clamp-2 break-words">{p.name}</span>
+                    <span className="block font-mono text-xs text-muted mt-0.5 truncate">
+                      {fmt(p.price, currency)}
+                      {trackStock && (
+                        <span className={p.stock < 5 ? "text-red" : ""}>
+                          {" · "}
+                          {soldOut ? "Rupture" : `${p.stock} en stock`}
+                        </span>
+                      )}
                     </span>
+                  </button>
+                  {inCart === 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => setQty(p.id, 1)}
+                      disabled={soldOut}
+                      aria-label={`Ajouter ${p.name}`}
+                      className="shrink-0 w-10 h-10 rounded-full bg-ochre-soft text-ochre text-xl leading-none flex items-center justify-center disabled:opacity-40"
+                    >
+                      +
+                    </button>
+                  ) : (
+                    <Stepper qty={inCart} onChange={(q) => setQty(p.id, q)} size="sm" />
                   )}
                 </div>
               );
@@ -194,6 +214,52 @@ export default function VenteClient({
           </div>
         </section>
       ))}
+
+      {filterOpen && (
+        <div className="fixed inset-0 z-30 flex flex-col justify-end" role="dialog" aria-modal="true" aria-label="Filtrer par catégorie">
+          <div className="absolute inset-0 bg-ink/40" onClick={() => setFilterOpen(false)} />
+          <div className="sheet-up relative bg-card rounded-t-3xl border-t border-line max-w-2xl w-full mx-auto max-h-[70vh] flex flex-col">
+            <div className="pt-2.5 flex justify-center">
+              <span className="w-10 h-1 rounded-full bg-line" />
+            </div>
+            <div className="px-5 pt-3 pb-3 flex items-center justify-between">
+              <p className="font-display font-semibold text-lg">Catégorie</p>
+              <button onClick={() => setFilterOpen(false)} className="text-muted text-sm h-9 px-2">
+                Fermer
+              </button>
+            </div>
+            <ul className="overflow-y-auto px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-line pt-2">
+              {[null, ...categories].map((c) => {
+                const selected = category === c;
+                const count = c ? products.filter((p) => p.category === c).length : products.length;
+                return (
+                  <li key={c ?? "all"}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCategory(c);
+                        setFilterOpen(false);
+                      }}
+                      aria-pressed={selected}
+                      className={`w-full flex items-center gap-3 px-3 h-12 rounded-xl text-left ${selected ? "bg-ochre-soft" : ""}`}
+                    >
+                      <span className={`flex-1 min-w-0 truncate text-sm ${selected ? "font-semibold text-ochre" : "font-medium"}`}>
+                        {c ?? "Toutes les catégories"}
+                      </span>
+                      <span className="font-mono text-xs text-muted shrink-0">{count}</span>
+                      {selected && (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-ochre shrink-0" aria-hidden="true">
+                          <path d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </div>
+      )}
 
       {message && (
         <div

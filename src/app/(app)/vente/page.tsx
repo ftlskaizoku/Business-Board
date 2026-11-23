@@ -104,7 +104,7 @@ export default async function VentePage() {
     <div>
       <PageHeader
         eyebrow={showProducts ? "Vente" : "Rendez-vous"}
-        title={showProducts ? "Encaisser" : "Agenda du jour"}
+        title={showProducts ? "Caisse" : "Agenda du jour"}
         subtitle={
           todaySales.length > 0 ? (
             <>
