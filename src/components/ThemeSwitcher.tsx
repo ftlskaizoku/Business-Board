@@ -90,14 +90,14 @@ export default function ThemeSwitcher() {
           ✓ Thème enregistré
         </span>
       </div>
-      <div className="grid grid-cols-3 gap-2.5 mb-5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4 gap-2.5 mb-5">
         {light.map((t) => (
           <Tile key={t.id} t={t} active={active === t.id} onPick={() => apply(t.id)} />
         ))}
       </div>
 
       <p className="text-xs uppercase tracking-widest text-muted font-medium mb-2">Thèmes sombres</p>
-      <div className="grid grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4 gap-2.5">
         {dark.map((t) => (
           <Tile key={t.id} t={t} active={active === t.id} onPick={() => apply(t.id)} />
         ))}

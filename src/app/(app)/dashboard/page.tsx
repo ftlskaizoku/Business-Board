@@ -131,12 +131,12 @@ export default async function DashboardPage() {
           />
         </div>
         <TrendChart points={trendPoints} currency={business.currency} aLabel="Ventes" bLabel="Dépenses" />
-        <div className="flex gap-4 mt-2 pt-3 border-t border-line text-[11px] text-muted">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 pt-3 border-t border-line text-[11px] text-muted">
           <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green inline-block" />Ventes</span>
           <span className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-red inline-block" />Dépenses {last7ExpensesSum > 0 && <span className="font-mono">· {fmt(last7ExpensesSum, business.currency)}</span>}
           </span>
-          <span className="ml-auto">Touchez la courbe</span>
+          <span className="ml-auto whitespace-nowrap">Touchez la courbe</span>
         </div>
       </Card>
       </div>

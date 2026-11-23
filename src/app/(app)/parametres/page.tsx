@@ -81,6 +81,8 @@ export default async function ParametresPage() {
         </div>
       </div>
 
+      <div className="lg:grid lg:grid-cols-2 lg:gap-x-8 lg:items-start">
+        <div className="min-w-0">
       <SectionHeader title="Profil" />
       <Group>
         <InlineEdit label="Nom complet" name="full_name" value={profile?.full_name || ""} action={updateFullName} />
@@ -100,6 +102,12 @@ export default async function ParametresPage() {
         )}
       </Group>
 
+      <SectionHeader title="Compte" />
+      <Group>
+        <LinkRow title="Se déconnecter" hint={profile?.email || user.email || ""} action={<SignOutButton />} />
+      </Group>
+        </div>
+        <div className="min-w-0">
       <SectionHeader title="Apparence" />
       <div className="bg-card border border-line rounded-[20px] card-surface p-4" data-tour="parametres-theme">
         <ThemeSwitcher />
@@ -163,11 +171,8 @@ export default async function ParametresPage() {
           </Group>
         </>
       )}
-
-      <SectionHeader title="Compte" />
-      <Group>
-        <LinkRow title="Se déconnecter" hint={profile?.email || user.email || ""} action={<SignOutButton />} />
-      </Group>
+        </div>
+      </div>
     </div>
   );
 }
