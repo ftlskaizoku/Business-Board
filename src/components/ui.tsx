@@ -171,16 +171,13 @@ export function PageHeading({ eyebrow, title }: { eyebrow: string; title: string
 }
 
 /** Tiny inline icons (stroke = currentColor, so they follow the theme). */
-export function Icon({ name, size = 16 }: { name: "sales" | "expense" | "profit" | "stock" | "box" | "filter" | "plus" | "close"; size?: number }) {
+export function Icon({ name, size = 16 }: { name: "sales" | "expense" | "profit" | "stock" | "box"; size?: number }) {
   const paths: Record<string, React.ReactNode> = {
     sales: <path d="M4 15l5-5 4 4 7-8M15 6h5v5" />,
     expense: <path d="M4 9l5 5 4-4 7 8M15 18h5v-5" />,
     profit: <path d="M12 3v18M16 7.5c0-1.7-1.8-3-4-3s-4 1.3-4 3 1.8 2.6 4 3 4 1.3 4 3-1.8 3-4 3-4-1.3-4-3" />,
     stock: <path d="M3 8l9-5 9 5v8l-9 5-9-5V8zM3 8l9 5 9-5M12 13v8" />,
     box: <path d="M4 7h16v13H4zM9 7V4h6v3" />,
-    filter: <path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 5v4M6 15v4" />,
-    plus: <path d="M12 5v14M5 12h14" />,
-    close: <path d="M6 6l12 12M18 6L6 18" />,
   };
   return (
     <svg

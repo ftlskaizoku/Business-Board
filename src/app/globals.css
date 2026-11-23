@@ -10,13 +10,10 @@
   --color-ochre-soft: #F2E2CB;
   --color-indigo: #3F4B8C;
   --color-indigo-soft: #E4E6F3;
-  --color-green: #3A8A5C;
-  --color-red: #C0463E;
-  /* Soft backgrounds are the semantic colour mixed into the theme's own card
-     colour, so green/red always sit naturally on every palette. */
-  --tint: 13%;
-  --color-green-soft: color-mix(in srgb, var(--color-green) var(--tint), var(--color-card));
-  --color-red-soft: color-mix(in srgb, var(--color-red) var(--tint), var(--color-card));
+  --color-green: #3D8B5F;
+  --color-green-soft: #E4F3EA;
+  --color-red: #C24B4B;
+  --color-red-soft: #F8E6E6;
 }
 
 /* Theme palettes. Every screen is already built on these tokens, so
@@ -33,8 +30,10 @@
   --color-ochre-soft: #E4E6F3;
   --color-indigo: #C97A2B;
   --color-indigo-soft: #F2E2CB;
-  --color-green: #2E8B6A;
-  --color-red: #C23F5C;
+  --color-green: #3D8B5F;
+  --color-green-soft: #E4F3EA;
+  --color-red: #C24B4B;
+  --color-red-soft: #F8E6E6;
 }
 
 [data-theme="sombre"] {
@@ -47,8 +46,10 @@
   --color-ochre-soft: #3E2E1B;
   --color-indigo: #8891CC;
   --color-indigo-soft: #262A47;
-  --color-green: #7CC592;
-  --color-red: #E5887A;
+  --color-green: #6FC492;
+  --color-green-soft: #1E3A29;
+  --color-red: #E08080;
+  --color-red-soft: #402323;
 }
 
 [data-theme="foret"] {
@@ -61,8 +62,10 @@
   --color-ochre-soft: #DCEEE1;
   --color-indigo: #B5652F;
   --color-indigo-soft: #F3E3D6;
-  --color-green: #23925F;
-  --color-red: #B9452F;
+  --color-green: #3D8B5F;
+  --color-green-soft: #E4F3EA;
+  --color-red: #C24B4B;
+  --color-red-soft: #F8E6E6;
 }
 
 [data-theme="corail"] {
@@ -75,8 +78,10 @@
   --color-ochre-soft: #FBE1D8;
   --color-indigo: #3F4B8C;
   --color-indigo-soft: #E4E6F3;
-  --color-green: #3A8F5E;
-  --color-red: #B5304B;
+  --color-green: #3D8B5F;
+  --color-green-soft: #E4F3EA;
+  --color-red: #C24B4B;
+  --color-red-soft: #F8E6E6;
 }
 
 [data-theme="nuit-indigo"] {
@@ -89,8 +94,10 @@
   --color-ochre-soft: #262B4E;
   --color-indigo: #E2A159;
   --color-indigo-soft: #3A2F1E;
-  --color-green: #66C79C;
-  --color-red: #EE859A;
+  --color-green: #6FC492;
+  --color-green-soft: #1E3A29;
+  --color-red: #E08080;
+  --color-red-soft: #402323;
 }
 
 [data-theme="ardoise"] {
@@ -103,8 +110,10 @@
   --color-ochre-soft: #E2E8F0;
   --color-indigo: #C97A2B;
   --color-indigo-soft: #F2E2CB;
-  --color-green: #2F8C69;
-  --color-red: #C1424B;
+  --color-green: #3D8B5F;
+  --color-green-soft: #E4F3EA;
+  --color-red: #C24B4B;
+  --color-red-soft: #F8E6E6;
 }
 
 [data-theme="violet"] {
@@ -117,8 +126,10 @@
   --color-ochre-soft: #EDE3F9;
   --color-indigo: #C97A2B;
   --color-indigo-soft: #F2E2CB;
-  --color-green: #2E8F6F;
-  --color-red: #C23F62;
+  --color-green: #3D8B5F;
+  --color-green-soft: #E4F3EA;
+  --color-red: #C24B4B;
+  --color-red-soft: #F8E6E6;
 }
 
 @theme inline {
@@ -345,8 +356,10 @@ button:not(:disabled):active {
   --color-ochre-soft: #16294A;
   --color-indigo: #F2A65A;
   --color-indigo-soft: #3A2B17;
-  --color-green: #52D0A2;
-  --color-red: #FF7F8C;
+  --color-green: #5FD0A0;
+  --color-green-soft: #143528;
+  --color-red: #FF7A7A;
+  --color-red-soft: #3D1C1F;
   --color-on-accent: #07101F;
 }
 
@@ -360,8 +373,10 @@ button:not(:disabled):active {
   --color-ochre-soft: #1A3A29;
   --color-indigo: #E9A765;
   --color-indigo-soft: #3A2C1B;
-  --color-green: #7ADBA0;
-  --color-red: #EE8C7E;
+  --color-green: #6FD39B;
+  --color-green-soft: #1B3D2A;
+  --color-red: #E88383;
+  --color-red-soft: #3F2325;
   --color-on-accent: #07140D;
 }
 
@@ -375,8 +390,10 @@ button:not(:disabled):active {
   --color-ochre-soft: #2E2050;
   --color-indigo: #E8A65E;
   --color-indigo-soft: #3B2C1B;
-  --color-green: #70D0A6;
-  --color-red: #F2849E;
+  --color-green: #6FC492;
+  --color-green-soft: #1E3A29;
+  --color-red: #E08080;
+  --color-red-soft: #402323;
   --color-on-accent: #120A22;
 }
 
@@ -390,8 +407,10 @@ button:not(:disabled):active {
   --color-ochre-soft: #10332F;
   --color-indigo: #F5A65B;
   --color-indigo-soft: #3A2B17;
-  --color-green: #86DB9C;
-  --color-red: #F28585;
+  --color-green: #6FC492;
+  --color-green-soft: #1E3A29;
+  --color-red: #E88383;
+  --color-red-soft: #402323;
   --color-on-accent: #061B18;
 }
 
@@ -405,8 +424,10 @@ button:not(:disabled):active {
   --color-ochre-soft: #4A2418;
   --color-indigo: #7FA0FF;
   --color-indigo-soft: #1F2A4D;
-  --color-green: #86D096;
-  --color-red: #F0627A;
+  --color-green: #6FC492;
+  --color-green-soft: #1E3A29;
+  --color-red: #F08A8A;
+  --color-red-soft: #432526;
   --color-on-accent: #2A0F08;
 }
 
@@ -419,7 +440,6 @@ button:not(:disabled):active {
 [data-theme="carbone"],
 [data-theme="braise"] {
   color-scheme: dark;
-  --tint: 20%;
 }
 
 /* Horizontal scrollers without the visible bar. */

@@ -14,12 +14,10 @@ export default function ExpenseForm({
   currency,
   history,
   defaults,
-  onSaved,
 }: {
   currency: string;
   history: string[];
   defaults: string[];
-  onSaved?: () => void;
 }) {
   const [name, setName] = useState("");
   const [showAll, setShowAll] = useState(false);
@@ -45,10 +43,7 @@ export default function ExpenseForm({
       form.reset();
       setName("");
       setSaved(true);
-      setTimeout(() => {
-        setSaved(false);
-        onSaved?.();
-      }, 900);
+      setTimeout(() => setSaved(false), 2000);
     });
   }
 
