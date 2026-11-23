@@ -1,12 +1,11 @@
 import { requireUserAndBusiness } from "@/lib/data";
 import { hasProducts, hasServices } from "@/lib/niches";
-import { todayKey, fmt, dayLabelFr, groupByDay } from "@/lib/format";
+import { todayKey, fmt, daysAgoKey } from "@/lib/format";
 import VenteClient from "@/components/VenteClient";
 import RdvClient from "@/components/RdvClient";
-import ManualSaleForm from "@/components/ManualSaleForm";
-import SaleRow from "@/components/SaleRow";
+import SalesHistory from "@/components/SalesHistory";
 import VenteTabs, { type VenteTab } from "@/components/VenteTabs";
-import { Card, EmptyState, Icon, PageHeader, SectionHeader } from "@/components/ui";
+import { Card, EmptyState, Icon, PageHeader } from "@/components/ui";
 import type { Product, ServiceItem, AppointmentSlot } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -37,12 +36,12 @@ export default async function VentePage() {
       .from("sales")
       .select("id, sale_date, total, sale_items(id, name, qty, price)")
       .eq("business_id", business.id)
+      .gte("sale_date", daysAgoKey(89))
       .order("sale_date", { ascending: false })
       .order("created_at", { ascending: false })
-      .limit(20),
+      .limit(400),
   ]);
 
-  const days = groupByDay(recentSales || [], (s) => s.sale_date);
   const today = todayKey();
   const todaySales = (recentSales || []).filter((s) => s.sale_date === today);
   const todayTotal = todaySales.reduce((n, s) => n + s.total, 0);
@@ -65,35 +64,7 @@ export default async function VentePage() {
 
   const agenda = <RdvClient services={services || []} takenSlots={slots || []} currency={business.currency} />;
 
-  const historique = (
-    <>
-      <ManualSaleForm currency={business.currency} />
-      <SectionHeader title="Ventes récentes" aside={recentSales?.length ? `${recentSales.length} dernières` : undefined} className="!mt-6" />
-      {days.length === 0 ? (
-        <Card>
-          <EmptyState icon={<Icon name="sales" size={20} />} title="Aucune vente enregistrée" />
-        </Card>
-      ) : (
-        <div className="space-y-5">
-          {days.map((d) => (
-            <section key={d.date}>
-              <div className="flex items-baseline justify-between px-1 mb-2 gap-3">
-                <p className="text-xs font-medium uppercase tracking-wider text-muted capitalize">{dayLabelFr(d.date)}</p>
-                <p className="font-mono text-xs text-muted shrink-0">
-                  {fmt(d.rows.reduce((n, s) => n + s.total, 0), business.currency)}
-                </p>
-              </div>
-              <div className="space-y-2">
-                {d.rows.map((s) => (
-                  <SaleRow key={s.id} sale={s} currency={business.currency} />
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
-      )}
-    </>
-  );
+  const historique = <SalesHistory sales={recentSales || []} currency={business.currency} />;
 
   const tabs: VenteTab[] = [];
   if (showProducts) tabs.push({ id: "caisse", label: "Encaisser", panel: caisse });

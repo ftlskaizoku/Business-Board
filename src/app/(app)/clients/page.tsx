@@ -1,53 +1,64 @@
 import { requireUserAndBusiness } from "@/lib/data";
 import { fmt } from "@/lib/format";
-import { Card, EmptyNote, EyebrowLabel } from "@/components/ui";
+import { Card, Field, PageHeader, SectionHeader, primaryBtn } from "@/components/ui";
+import ClientsList, { type ClientItem } from "@/components/ClientsList";
 import { addCustomer } from "../actions";
 
 export const dynamic = "force-dynamic";
 
 export default async function ClientsPage() {
   const { supabase, business } = await requireUserAndBusiness();
-  const { data: customers } = await supabase
+  const { data } = await supabase
     .from("customers")
-    .select("*")
+    .select("id, name, phone, visits, total_spend")
     .eq("business_id", business.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .returns<ClientItem[]>();
+
+  const clients = data || [];
+  const totalSpend = clients.reduce((n, c) => n + c.total_spend, 0);
+  const visits = clients.reduce((n, c) => n + c.visits, 0);
 
   return (
     <div>
-      <p className="text-xs uppercase tracking-widest text-muted mb-1">Clients</p>
-      <h1 className="font-display text-[26px] leading-tight font-semibold mb-5">
-        {customers?.length ?? 0} client{(customers?.length ?? 0) > 1 ? "s" : ""} enregistré
-        {(customers?.length ?? 0) > 1 ? "s" : ""}
-      </h1>
+      <PageHeader
+        eyebrow="Clients"
+        title="Votre clientèle"
+        subtitle={`${clients.length} client${clients.length > 1 ? "s" : ""} enregistré${clients.length > 1 ? "s" : ""}`}
+      />
+
+      {clients.length > 0 && (
+        <Card className="!p-0 overflow-hidden mb-3">
+          <div className="grid grid-cols-2 divide-x divide-line">
+            <div className="p-3.5 min-w-0">
+              <p className="text-[11px] text-muted">Total dépensé</p>
+              <p className="font-mono text-[15px] font-medium mt-1 break-words">{fmt(totalSpend, business.currency)}</p>
+            </div>
+            <div className="p-3.5 min-w-0">
+              <p className="text-[11px] text-muted">Visites</p>
+              <p className="font-mono text-[15px] font-medium mt-1">{visits}</p>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <Card>
-        <p className="text-xs uppercase tracking-widest text-muted mb-3">Nouveau client</p>
-        <form action={addCustomer} className="flex gap-2">
-          <input name="name" placeholder="Nom" required className="flex-1 border border-line rounded-lg px-3 py-2 bg-cream" />
-          <input name="phone" placeholder="Téléphone" className="flex-1 border border-line rounded-lg px-3 py-2 bg-cream" />
-          <button type="submit" className="bg-ochre text-white rounded-lg px-4 font-medium">
-            +
+        <p className="font-display font-semibold mb-4">Nouveau client</p>
+        <form action={addCustomer} className="space-y-4">
+          <Field label="Nom">
+            <input name="name" placeholder="ex. Awa Diop" required autoComplete="off" className="field" />
+          </Field>
+          <Field label="Téléphone (optionnel)">
+            <input name="phone" type="tel" inputMode="tel" placeholder="77 000 00 00" autoComplete="off" className="field font-mono" />
+          </Field>
+          <button type="submit" className={primaryBtn}>
+            Ajouter le client
           </button>
         </form>
       </Card>
 
-      <EyebrowLabel>Liste</EyebrowLabel>
-      {!customers || customers.length === 0 ? (
-        <EmptyNote>Aucun client enregistré pour l&apos;instant.</EmptyNote>
-      ) : (
-        <div className="space-y-2">
-          {customers.map((c) => (
-            <div key={c.id} className="flex justify-between items-center gap-2 bg-card border border-line rounded-xl px-3.5 py-2.5">
-              <div className="min-w-0">
-                <p className="text-sm truncate">{c.name}</p>
-                <p className="text-xs text-muted truncate">{c.phone || "—"} · {c.visits} visite{c.visits > 1 ? "s" : ""}</p>
-              </div>
-              <span className="font-mono text-sm shrink-0">{fmt(c.total_spend, business.currency)}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      <SectionHeader title="Liste" aside={clients.length || undefined} />
+      <ClientsList clients={clients} currency={business.currency} />
     </div>
   );
 }
