@@ -20,7 +20,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       showsProducts={hasProducts(business.type)}
       onFinish={markTutorialSeen}
     >
-      <div className="min-h-screen flex flex-col pb-16">
+      <div className="min-h-screen flex flex-col pb-[calc(4rem+env(safe-area-inset-bottom))]">
         <header className="sticky top-0 z-20 px-5 pt-5 pb-3.5 border-b border-line bg-card/85 backdrop-blur-md">
           <div className="flex items-center justify-between gap-3 max-w-2xl mx-auto w-full">
             <div className="flex items-center gap-3 min-w-0">

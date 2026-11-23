@@ -18,6 +18,94 @@ export function EyebrowLabel({ children }: { children: React.ReactNode }) {
   return <p className="text-xs uppercase tracking-widest text-muted mt-7 mb-2.5 font-medium">{children}</p>;
 }
 
+/** Section title with an optional right-hand slot (a count, a link, a total). */
+export function SectionHeader({
+  title,
+  aside,
+  className = "",
+}: {
+  title: string;
+  aside?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`flex items-baseline justify-between gap-3 mt-8 mb-3 min-w-0 ${className}`}>
+      <h2 className="font-display text-[17px] font-semibold leading-tight truncate">{title}</h2>
+      {aside && <div className="text-xs text-muted shrink-0 font-mono">{aside}</div>}
+    </div>
+  );
+}
+
+/** Screen title: small eyebrow, big display title, optional one-line subtitle. */
+export function PageHeader({
+  eyebrow,
+  title,
+  subtitle,
+  action,
+}: {
+  eyebrow: string;
+  title: string;
+  subtitle?: React.ReactNode;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="mb-6 flex items-end justify-between gap-3 min-w-0">
+      <div className="min-w-0">
+        <p className="text-xs uppercase tracking-widest text-muted mb-1 font-medium">{eyebrow}</p>
+        <h1 className="font-display text-[28px] leading-[1.1] font-semibold break-words">{title}</h1>
+        {subtitle && <p className="text-sm text-muted mt-1.5">{subtitle}</p>}
+      </div>
+      {action && <div className="shrink-0">{action}</div>}
+    </div>
+  );
+}
+
+/** Label + control, the one form-field layout used app-wide. */
+export function Field({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="block min-w-0">
+      <span className="block text-xs font-medium text-muted mb-1.5">{label}</span>
+      {children}
+      {hint && <span className="block text-[11px] text-muted mt-1">{hint}</span>}
+    </label>
+  );
+}
+
+/** Full-width primary action. */
+export const primaryBtn =
+  "w-full h-12 rounded-2xl bg-ochre font-medium text-[15px] disabled:opacity-50 shadow-[0_6px_16px_-8px_var(--color-ochre)]";
+export const ghostBtn =
+  "h-10 rounded-xl border border-line px-4 text-sm font-medium text-ink bg-card disabled:opacity-50";
+
+/** Empty state: icon bubble + one line + optional hint. */
+export function EmptyState({
+  icon,
+  title,
+  hint,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  hint?: string;
+}) {
+  return (
+    <div className="flex flex-col items-center text-center py-10 px-6">
+      <span className="w-12 h-12 rounded-full bg-ochre-soft text-ochre flex items-center justify-center mb-3">
+        {icon}
+      </span>
+      <p className="text-sm font-medium">{title}</p>
+      {hint && <p className="text-xs text-muted mt-1 max-w-[16rem]">{hint}</p>}
+    </div>
+  );
+}
+
 /** Small rounded "+12%" badge, green or red like the reference dashboards. */
 export function DeltaPill({ value, tone }: { value: string; tone: "good" | "bad" | "default" }) {
   const cls =

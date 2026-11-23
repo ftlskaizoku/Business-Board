@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { addExpense } from "@/app/(app)/actions";
 import { todayKey } from "@/lib/format";
+import { Field, primaryBtn } from "@/components/ui";
 
 const VISIBLE_CHIPS = 10;
 
@@ -47,21 +48,8 @@ export default function ExpenseForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <div>
-        <label className="block text-xs text-muted mb-1">Date</label>
-        <input
-          name="date"
-          type="date"
-          defaultValue={todayKey()}
-          max={todayKey()}
-          required
-          className="w-full border border-line rounded-lg px-3 py-2 bg-cream"
-        />
-      </div>
-
-      <div>
-        <label className="block text-xs text-muted mb-1">Quelle dépense ?</label>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Field label="Quelle dépense ?">
         <input
           name="category"
           value={name}
@@ -70,62 +58,65 @@ export default function ExpenseForm({
           maxLength={60}
           autoComplete="off"
           placeholder="ex. Gaz, Transport, Réparation…"
-          className="w-full border border-line rounded-lg px-3 py-2 bg-cream"
+          className="field"
         />
-        {all.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            {chips.map((c) => {
-              const selected = c.toLowerCase() === typed;
-              return (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setName(c)}
-                  className={`text-xs rounded-full border px-2.5 py-1 ${
-                    selected ? "border-ochre bg-ochre-soft text-ochre font-medium" : "border-line text-muted"
-                  }`}
-                >
-                  {c}
-                </button>
-              );
-            })}
-            {all.length > VISIBLE_CHIPS && (
+      </Field>
+      {all.length > 0 && (
+        <div className="-mt-1 flex flex-wrap gap-1.5">
+          {chips.map((c) => {
+            const selected = c.toLowerCase() === typed;
+            return (
               <button
+                key={c}
                 type="button"
-                onClick={() => setShowAll((v) => !v)}
-                className="text-xs px-2 py-1 text-ochre font-medium"
+                onClick={() => setName(c)}
+                className={`text-xs rounded-full border px-3 h-8 transition-colors ${
+                  selected ? "border-ochre bg-ochre-soft text-ochre font-medium" : "border-line text-muted bg-card"
+                }`}
               >
-                {showAll ? "Réduire" : `+${all.length - VISIBLE_CHIPS} autres`}
+                {c}
               </button>
-            )}
-          </div>
-        )}
+            );
+          })}
+          {all.length > VISIBLE_CHIPS && (
+            <button
+              type="button"
+              onClick={() => setShowAll((v) => !v)}
+              className="text-xs px-2 h-8 text-ochre font-medium"
+            >
+              {showAll ? "Réduire" : `+${all.length - VISIBLE_CHIPS} autres`}
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="grid grid-cols-5 gap-3">
+        <div className="col-span-3 min-w-0">
+          <Field label={`Montant (${currency})`}>
+            <input
+              name="amount"
+              type="number"
+              inputMode="numeric"
+              required
+              min={1}
+              placeholder="5000"
+              className="field font-mono"
+            />
+          </Field>
+        </div>
+        <div className="col-span-2 min-w-0">
+          <Field label="Date">
+            <input name="date" type="date" defaultValue={todayKey()} max={todayKey()} required className="field px-2" />
+          </Field>
+        </div>
       </div>
 
-      <div>
-        <label className="block text-xs text-muted mb-1">Montant ({currency})</label>
-        <input
-          name="amount"
-          type="number"
-          required
-          placeholder="5000"
-          className="w-full border border-line rounded-lg px-3 py-2 bg-cream"
-        />
-      </div>
-      <div>
-        <label className="block text-xs text-muted mb-1">Note (optionnel)</label>
-        <input
-          name="note"
-          placeholder="Fournisseur, détail…"
-          className="w-full border border-line rounded-lg px-3 py-2 bg-cream"
-        />
-      </div>
-      <button
-        type="submit"
-        disabled={pending || !name.trim()}
-        className="w-full bg-ochre text-white rounded-lg py-2.5 font-medium disabled:opacity-60"
-      >
-        {pending ? "…" : saved ? "✓ Dépense enregistrée" : "Enregistrer la dépense"}
+      <Field label="Note (optionnel)">
+        <input name="note" placeholder="Fournisseur, détail…" className="field" />
+      </Field>
+
+      <button type="submit" disabled={pending || !name.trim()} className={primaryBtn}>
+        {pending ? "Enregistrement…" : saved ? "✓ Dépense enregistrée" : "Enregistrer la dépense"}
       </button>
     </form>
   );

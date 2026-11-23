@@ -1,6 +1,7 @@
 import { requireUserAndBusiness } from "@/lib/data";
 import { EXPENSE_CATEGORIES } from "@/lib/types";
-import { Card, EyebrowLabel, EmptyNote } from "@/components/ui";
+import { fmt, dayLabelFr, groupByDay } from "@/lib/format";
+import { Card, EmptyState, Icon, PageHeader, SectionHeader } from "@/components/ui";
 import ExpenseRow from "@/components/ExpenseRow";
 import ExpenseForm from "@/components/ExpenseForm";
 
@@ -15,7 +16,7 @@ export default async function DepensesPage() {
       .eq("business_id", business.id)
       .order("expense_date", { ascending: false })
       .order("created_at", { ascending: false })
-      .limit(20),
+      .limit(30),
     // Every expense name this business has used, newest first — becomes the
     // tap-to-reuse list in the form. Names are compared ignoring case.
     supabase
@@ -39,23 +40,42 @@ export default async function DepensesPage() {
     .sort((a, b) => b.count - a.count || a.order - b.order)
     .map((s) => s.name);
 
+  const days = groupByDay(expenses || [], (e) => e.expense_date);
+
   return (
     <div>
-      <p className="text-xs uppercase tracking-widest text-muted mb-1">Dépenses</p>
-      <h1 className="font-display text-[26px] leading-tight font-semibold mb-5">{business.name}</h1>
+      <PageHeader eyebrow="Dépenses" title="Où part l'argent" subtitle={business.name} />
 
       <Card data-tour="depenses-form">
-        <p className="text-xs uppercase tracking-widest text-muted mb-3">Nouvelle dépense</p>
+        <p className="font-display font-semibold mb-4">Nouvelle dépense</p>
         <ExpenseForm currency={business.currency} history={history} defaults={EXPENSE_CATEGORIES} />
       </Card>
 
-      <EyebrowLabel>Récentes</EyebrowLabel>
-      {!expenses || expenses.length === 0 ? (
-        <EmptyNote>Aucune dépense enregistrée.</EmptyNote>
+      <SectionHeader title="Récentes" aside={expenses?.length ? `${expenses.length} dernières` : undefined} />
+      {days.length === 0 ? (
+        <Card>
+          <EmptyState
+            icon={<Icon name="expense" size={20} />}
+            title="Aucune dépense enregistrée"
+            hint="Notez vos achats et charges pour connaître votre vrai bénéfice."
+          />
+        </Card>
       ) : (
-        <div className="space-y-2">
-          {expenses.map((e) => (
-            <ExpenseRow key={e.id} expense={e} currency={business.currency} suggestions={history} />
+        <div className="space-y-5">
+          {days.map((d) => (
+            <section key={d.date}>
+              <div className="flex items-baseline justify-between px-1 mb-2 gap-3">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted capitalize">{dayLabelFr(d.date)}</p>
+                <p className="font-mono text-xs text-muted shrink-0">
+                  −{fmt(d.rows.reduce((n, e) => n + e.amount, 0), business.currency)}
+                </p>
+              </div>
+              <div className="space-y-2">
+                {d.rows.map((e) => (
+                  <ExpenseRow key={e.id} expense={e} currency={business.currency} suggestions={history} />
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       )}

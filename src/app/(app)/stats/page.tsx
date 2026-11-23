@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { requireUserAndBusiness } from "@/lib/data";
 import { hasServices } from "@/lib/niches";
-import { fmt, fmtK, daysAgoKey } from "@/lib/format";
-import { Metric, Card, EyebrowLabel, EmptyNote, PageHeading, Icon } from "@/components/ui";
+import { fmt, fmtK, daysAgoKey, dayLabelFr, monthLabelFr } from "@/lib/format";
+import { Card, DeltaPill, EmptyState, PageHeader, SectionHeader, Icon } from "@/components/ui";
 import { TrendChart, type TrendPoint } from "@/components/charts";
 import Donut, { sliceColor } from "@/components/Donut";
 import MonthSelect from "@/components/MonthSelect";
@@ -70,10 +70,14 @@ export default async function StatsPage({
   if (months.length === 0) {
     return (
       <div>
-        <PageHeading eyebrow="Statistiques" title={business.name} />
-        <EmptyNote>
-          Pas encore d&apos;historique. Les statistiques apparaîtront dès vos premières ventes et dépenses.
-        </EmptyNote>
+        <PageHeader eyebrow="Statistiques" title="Vos chiffres" subtitle={business.name} />
+        <Card>
+          <EmptyState
+            icon={<Icon name="sales" size={20} />}
+            title="Pas encore d'historique"
+            hint="Les statistiques apparaîtront dès vos premières ventes et dépenses."
+          />
+        </Card>
       </div>
     );
   }
@@ -112,9 +116,8 @@ export default async function StatsPage({
     : { label: "Bénéfice net", value: fmt(monthTotals.sales - monthTotals.expenses, business.currency) };
 
   // calendar, Monday-start
-  const firstOfMonth = new Date(month + "-01");
-  const startOffset = (firstOfMonth.getDay() + 6) % 7;
-  const daysInMonth = new Date(firstOfMonth.getFullYear(), firstOfMonth.getMonth() + 1, 0).getDate();
+  const startOffset = (new Date(month + "-01T00:00:00Z").getUTCDay() + 6) % 7;
+  const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
   const cells: ({ day: number; key: string; data?: DayAgg } | null)[] = [];
   for (let i = 0; i < startOffset; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) {
@@ -140,7 +143,7 @@ export default async function StatsPage({
   }
   const trendPoints: TrendPoint[] = last14.map((d) => ({
     label: String(Number(d.date.slice(8, 10))),
-    title: new Date(d.date + "T00:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" }),
+    title: new Date(d.date + "T00:00:00Z").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }),
     a: d.sales,
     b: d.expenses,
   }));
@@ -177,51 +180,88 @@ export default async function StatsPage({
     return rest > 0 ? [...top, { name: "Autres", value: rest }] : top;
   })();
 
+  const net = monthTotals.sales - monthTotals.expenses;
+  const netPositive = net >= 0;
+  const cur = business.currency;
+
   return (
     <div>
-      <PageHeading eyebrow="Statistiques" title={business.name} />
+      <PageHeader eyebrow="Statistiques" title="Vos chiffres" subtitle={business.name} />
 
-      <div className="grid grid-cols-2 gap-3">
-        <Metric
-          label="Ventes du mois"
-          icon={<Icon name="sales" />}
-          value={fmt(monthTotals.sales, business.currency)}
-          delta={salesPct !== null ? `${salesPct >= 0 ? "+" : ""}${salesPct}%` : undefined}
-          tone={salesPct !== null ? (salesPct >= 0 ? "good" : "bad") : "default"}
-        />
-        <Metric
-          label="Dépenses du mois"
-          icon={<Icon name="expense" />}
-          value={fmt(monthTotals.expenses, business.currency)}
-          delta={expensesPct !== null ? `${expensesPct >= 0 ? "+" : ""}${expensesPct}%` : undefined}
-          tone={expensesPct !== null ? (expensesPct <= 0 ? "good" : "bad") : "default"}
-        />
-        <Metric label="Panier moyen" value={fmt(avgBasket, business.currency)} />
-        <Metric label="Marge estimée" value={`${margin}%`} tone={margin >= 0 ? "good" : "bad"} />
-        <Metric label="Meilleur jour" value={bestDay ? fmt(bestDay.sales - bestDay.expenses, business.currency) : "—"} />
-        <Metric label={fourthMetric.label} value={fourthMetric.value} />
-      </div>
+      <MonthSelect months={months} current={month} />
 
-      <Card className={`mt-4 ${monthTotals.sales - monthTotals.expenses >= 0 ? "bg-green-soft" : "bg-red-soft"}`}>
-        <p className={`text-sm mb-1 ${monthTotals.sales - monthTotals.expenses >= 0 ? "text-green" : "text-red"}`}>
-          Bénéfice net du mois
-        </p>
-        <p className={`font-mono text-2xl font-medium break-words ${monthTotals.sales - monthTotals.expenses >= 0 ? "text-green" : "text-red"}`}>
-          {fmt(monthTotals.sales - monthTotals.expenses, business.currency)}
-        </p>
+      {/* Hero: the one number that matters, then what it is made of. */}
+      <Card className="mt-4 !p-0 overflow-hidden">
+        <div className="p-5 pb-4">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs text-muted capitalize">Bénéfice net · {monthLabelFr(month)}</p>
+            {salesPct !== null && (
+              <DeltaPill value={`${salesPct >= 0 ? "+" : ""}${salesPct}% ventes`} tone={salesPct >= 0 ? "good" : "bad"} />
+            )}
+          </div>
+          <p className={`font-mono text-[32px] leading-tight font-medium mt-2 break-words ${netPositive ? "text-green" : "text-red"}`}>
+            {fmt(net, cur)}
+          </p>
+        </div>
+        <div className="grid grid-cols-3 border-t border-line divide-x divide-line">
+          <div className="p-3.5 min-w-0">
+            <p className="text-[11px] text-muted flex items-center gap-1"><Icon name="sales" size={12} />Ventes</p>
+            <p className="font-mono text-[13px] font-medium mt-1 break-words">{fmt(monthTotals.sales, cur)}</p>
+          </div>
+          <div className="p-3.5 min-w-0">
+            <p className="text-[11px] text-muted flex items-center gap-1"><Icon name="expense" size={12} />Dépenses</p>
+            <p className="font-mono text-[13px] font-medium mt-1 break-words">{fmt(monthTotals.expenses, cur)}</p>
+            {expensesPct !== null && (
+              <p className={`text-[10px] mt-0.5 font-mono ${expensesPct <= 0 ? "text-green" : "text-red"}`}>
+                {expensesPct >= 0 ? "+" : ""}{expensesPct}%
+              </p>
+            )}
+          </div>
+          <div className="p-3.5 min-w-0">
+            <p className="text-[11px] text-muted">Marge</p>
+            <p className={`font-mono text-[13px] font-medium mt-1 ${margin >= 0 ? "text-green" : "text-red"}`}>{margin}%</p>
+          </div>
+        </div>
       </Card>
 
-      <div className="flex items-center justify-between mt-6 mb-2">
-        <p className="text-xs uppercase tracking-widest text-muted">Calendrier</p>
-        <MonthSelect months={months} current={month} />
+      <div className="grid grid-cols-2 gap-3 mt-3">
+        {[
+          { label: "Panier moyen", value: fmt(avgBasket, cur), sub: `${monthSaleCount} vente${monthSaleCount > 1 ? "s" : ""}` },
+          {
+            label: "Meilleur jour",
+            value: bestDay ? fmt(bestDay.sales - bestDay.expenses, cur) : "—",
+            sub: bestDay ? dayLabelFr(bestDay.date) : "",
+          },
+          { label: fourthMetric.label, value: fourthMetric.value, sub: "" },
+          {
+            label: "Jours actifs",
+            value: String(monthDays.filter((d) => d.sales > 0).length),
+            sub: `sur ${daysInMonth}`,
+          },
+        ].map((k) => (
+          <Card key={k.label} className="!p-3.5">
+            <p className="text-[11px] text-muted truncate">{k.label}</p>
+            <p className="font-mono text-[15px] font-medium mt-1 break-words">{k.value}</p>
+            {k.sub && <p className="text-[11px] text-muted mt-0.5 truncate">{k.sub}</p>}
+          </Card>
+        ))}
       </div>
 
-      <div className="border border-line rounded-[20px] card-surface bg-card p-3" data-tour="stats-calendar">
+      <SectionHeader title="Tendance" aside="14 jours" />
+      <Card>
+        <TrendChart points={trendPoints} currency={cur} aLabel="Ventes" bLabel="Dépenses" />
+        <div className="flex gap-4 mt-2 pt-3 border-t border-line text-[11px] text-muted">
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green inline-block" />Ventes</span>
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red inline-block" />Dépenses</span>
+          <span className="ml-auto">Touchez la courbe</span>
+        </div>
+      </Card>
+
+      <SectionHeader title="Calendrier" aside="bénéfice / jour" />
+      <Card className="!p-3" data-tour="stats-calendar">
         <div className="grid grid-cols-7 gap-1 mb-1">
           {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
-            <span key={i} className="text-center text-[11px] text-muted">
-              {d}
-            </span>
+            <span key={i} className="text-center text-[11px] text-muted">{d}</span>
           ))}
         </div>
         <div className="grid grid-cols-7 gap-1">
@@ -229,113 +269,83 @@ export default async function StatsPage({
             if (!c) return <div key={i} />;
             const hasData = !!c.data;
             const profit = hasData ? c.data!.sales - c.data!.expenses : 0;
-            const cls = !hasData
-              ? "bg-cream text-muted"
-              : profit >= 0
-              ? "bg-green-soft text-green"
-              : "bg-red-soft text-red";
-            const isActive = c.key === activeKey ? "ring-2 ring-current" : "";
-            const content = (
-              <div className={`h-[46px] rounded-xl flex flex-col justify-between items-start p-1 ${cls} ${isActive}`}>
+            const tone = !hasData ? "bg-cream text-muted" : profit >= 0 ? "bg-green-soft text-green" : "bg-red-soft text-red";
+            const ring = c.key === activeKey ? "ring-2 ring-ink ring-offset-1 ring-offset-card" : "";
+            const cell = (
+              <div className={`h-[46px] min-w-0 rounded-xl flex flex-col justify-between items-start p-1 overflow-hidden ${tone} ${ring}`}>
                 <span className="text-[10px] opacity-75">{c.day}</span>
-                {hasData && <span className="text-[11px] font-mono font-medium">{fmtK(profit)}</span>}
+                {hasData && <span className="text-[10px] font-mono font-medium max-w-full truncate">{fmtK(profit)}</span>}
               </div>
             );
             return hasData ? (
-              <Link key={i} href={`/stats?month=${month}&day=${c.key}`}>
-                {content}
+              <Link key={i} href={`/stats?month=${month}&day=${c.key}`} scroll={false} aria-label={`Voir le ${c.key}`}>
+                {cell}
               </Link>
             ) : (
-              <div key={i}>{content}</div>
+              <div key={i}>{cell}</div>
             );
           })}
         </div>
-      </div>
 
-      {active && (
-        <Card className="mt-4">
-          <div className="flex justify-between items-baseline mb-3">
-            <span className="font-medium text-sm">{active.date}</span>
-            <span className={`font-mono text-lg font-medium ${active.sales - active.expenses >= 0 ? "text-green" : "text-red"}`}>
-              {fmt(active.sales - active.expenses, business.currency)}
-            </span>
+        {active && (
+          <div key={active.date} className="row-in mt-3 pt-3 border-t border-line">
+            <div className="flex justify-between items-baseline gap-3 mb-3">
+              <span className="font-display font-semibold text-sm capitalize">{dayLabelFr(active.date)}</span>
+              <span className={`font-mono text-base font-medium ${active.sales - active.expenses >= 0 ? "text-green" : "text-red"}`}>
+                {fmt(active.sales - active.expenses, cur)}
+              </span>
+            </div>
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
+              <div className="min-w-0"><dt className="text-[11px] text-muted">Ventes</dt><dd className="font-medium break-words">{fmt(active.sales, cur)}</dd></div>
+              <div className="min-w-0"><dt className="text-[11px] text-muted">Dépenses</dt><dd className="font-medium break-words">{fmt(active.expenses, cur)}</dd></div>
+              <div className="min-w-0"><dt className="text-[11px] text-muted">Produits vendus</dt><dd className="font-medium">{active.items}</dd></div>
+              <div className="min-w-0"><dt className="text-[11px] text-muted">Meilleure vente</dt><dd className="font-medium truncate">{topItemToday}</dd></div>
+            </dl>
           </div>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div className="min-w-0">
-              <p className="text-xs text-muted">Ventes</p>
-              <p className="font-medium mt-0.5 break-words">{fmt(active.sales, business.currency)}</p>
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs text-muted">Dépenses</p>
-              <p className="font-medium mt-0.5 break-words">{fmt(active.expenses, business.currency)}</p>
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs text-muted">Produits vendus</p>
-              <p className="font-medium mt-0.5">{active.items}</p>
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs text-muted">Meilleure vente</p>
-              <p className="font-medium mt-0.5 truncate">{topItemToday}</p>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      <EyebrowLabel>Ventes et dépenses, 14 derniers jours</EyebrowLabel>
-      <Card>
-        <TrendChart points={trendPoints} currency={business.currency} aLabel="Ventes" bLabel="Dépenses" />
-        <div className="flex gap-4 mt-2 pt-3 border-t border-line text-[11px] text-muted">
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-green inline-block" />Ventes</span>
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red inline-block" />Dépenses</span>
-          <span className="ml-auto">Touchez la courbe</span>
-        </div>
-      </Card>
-
-      <EyebrowLabel>Meilleures ventes du mois</EyebrowLabel>
-      <Card>
-        {topItems.length === 0 ? (
-          <EmptyNote>Aucune vente ce mois-ci.</EmptyNote>
-        ) : (
-          topItems.map((t, i) => (
-            <div key={t.name} className={i < topItems.length - 1 ? "mb-3" : ""}>
-              <div className="flex justify-between gap-2 text-sm mb-1">
-                <span className="min-w-0 truncate">
-                  {t.name} <span className="text-muted">· {t.qty}x</span>
-                </span>
-                <span className="font-mono shrink-0">{fmt(t.revenue, business.currency)}</span>
-              </div>
-              <div className="h-2 rounded-full bg-ochre-soft overflow-hidden">
-                <div className="h-full rounded-full bg-ochre bar-grow" style={{ width: `${Math.round((t.revenue / maxItemRev) * 100)}%` }} />
-              </div>
-            </div>
-          ))
         )}
       </Card>
 
-      <EyebrowLabel>Dépenses par catégorie</EyebrowLabel>
+      <SectionHeader title="Meilleures ventes" aside={monthLabelFr(month, "short")} />
+      <Card>
+        {topItems.length === 0 ? (
+          <EmptyState icon={<Icon name="box" size={20} />} title="Aucune vente ce mois-ci" />
+        ) : (
+          <ol className="space-y-3.5">
+            {topItems.map((t, i) => (
+              <li key={t.name}>
+                <div className="flex items-baseline gap-2 text-sm mb-1.5 min-w-0">
+                  <span className="w-4 shrink-0 font-mono text-[11px] text-muted">{i + 1}</span>
+                  <span className="min-w-0 flex-1 truncate">{t.name}</span>
+                  <span className="text-[11px] text-muted shrink-0">×{t.qty}</span>
+                  <span className="font-mono text-[13px] shrink-0">{fmt(t.revenue, cur)}</span>
+                </div>
+                <div className="ml-6 h-1.5 rounded-full bg-ochre-soft overflow-hidden">
+                  <div className="h-full rounded-full bg-ochre bar-grow" style={{ width: `${Math.round((t.revenue / maxItemRev) * 100)}%` }} />
+                </div>
+              </li>
+            ))}
+          </ol>
+        )}
+      </Card>
+
+      <SectionHeader title="Dépenses par catégorie" aside={fmt(monthTotals.expenses, cur)} />
       <Card>
         {expenseBreakdown.length === 0 ? (
-          <EmptyNote>Aucune dépense ce mois-ci.</EmptyNote>
+          <EmptyState icon={<Icon name="expense" size={20} />} title="Aucune dépense ce mois-ci" />
         ) : (
-          <div className="flex items-center gap-4">
-            <Donut
-              slices={expenseSlices}
-              centerLabel="Total"
-              centerValue={fmt(monthTotals.expenses, business.currency)}
-            />
-            <div className="flex-1 min-w-0 space-y-2">
+          <div className="flex items-center gap-4 min-w-0">
+            <Donut slices={expenseSlices} centerLabel="Total" centerValue={fmt(monthTotals.expenses, cur)} />
+            <ul className="flex-1 min-w-0 space-y-2.5">
               {expenseSlices.map((e, i) => (
-                <div key={e.name} className="flex items-center justify-between gap-2 text-sm">
-                  <span className="min-w-0 flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: sliceColor(i) }} />
-                    <span className="truncate">{e.name}</span>
-                  </span>
+                <li key={e.name} className="flex items-center gap-2 text-sm min-w-0">
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: sliceColor(i) }} />
+                  <span className="truncate flex-1">{e.name}</span>
                   <span className="font-mono text-xs shrink-0 text-muted">
                     {Math.round((e.value / (monthTotals.expenses || 1)) * 100)}%
                   </span>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         )}
       </Card>

@@ -30,7 +30,7 @@ export default function RdvClient({
 
   return (
     <div data-tour="vente-rdv">
-      <p className="text-xs uppercase tracking-widest text-muted mb-2">Créneaux du jour</p>
+      <h2 className="text-xs font-medium uppercase tracking-wider text-muted mb-2.5 px-1">Créneaux du jour</h2>
       <div className="grid grid-cols-4 gap-2 mb-6">
         {DAY_SLOTS.map((time) => {
           const taken = takenTimes.has(time);
@@ -39,8 +39,8 @@ export default function RdvClient({
               key={time}
               disabled={taken || pending}
               onClick={() => book(time)}
-              className={`rounded-lg py-2.5 text-sm font-mono ${
-                taken ? "bg-line text-muted" : "bg-card border border-line hover:border-ochre"
+              className={`h-11 rounded-xl text-sm font-mono border transition-colors ${
+                taken ? "bg-line text-muted border-transparent line-through" : "bg-card border-line active:border-ochre"
               }`}
             >
               {time}
@@ -49,19 +49,17 @@ export default function RdvClient({
         })}
       </div>
 
-      <p className="text-xs uppercase tracking-widest text-muted mb-2">Rendez-vous du jour</p>
+      <h2 className="text-xs font-medium uppercase tracking-wider text-muted mb-2.5 px-1">Rendez-vous du jour</h2>
       {takenSlots.length === 0 ? (
-        <p className="text-sm text-muted">Aucun rendez-vous pour l&apos;instant.</p>
+        <p className="text-sm text-muted px-1">Aucun rendez-vous pour l&apos;instant.</p>
       ) : (
         <div className="space-y-2">
-          {takenSlots
+          {[...takenSlots]
             .sort((a, b) => a.slot_time.localeCompare(b.slot_time))
             .map((s) => (
-              <div key={s.id} className="flex justify-between items-center gap-2 bg-card border border-line rounded-xl px-3.5 py-2.5">
-                <div className="min-w-0">
-                  <p className="text-sm font-mono">{s.slot_time}</p>
-                  <p className="text-xs text-muted truncate">{s.client}</p>
-                </div>
+              <div key={s.id} className="flex items-center gap-3 bg-card border border-line rounded-2xl card-surface px-3.5 py-3 min-w-0">
+                <span className="font-mono text-sm w-12 shrink-0">{s.slot_time}</span>
+                <p className="text-sm truncate flex-1 min-w-0">{s.client}</p>
                 <span className="text-xs text-muted shrink-0 truncate max-w-[40%]">{s.service_name}</span>
               </div>
             ))}
@@ -69,7 +67,7 @@ export default function RdvClient({
       )}
 
       {services.length > 0 && (
-        <p className="text-xs text-muted mt-6">
+        <p className="text-xs text-muted mt-5 px-1">
           Chaque réservation utilise « {services[0].name} » · {fmt(services[0].price, currency)}
         </p>
       )}

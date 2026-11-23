@@ -43,3 +43,35 @@ export function dateFr(iso: string) {
     timeZone: "UTC",
   });
 }
+
+/** "Aujourd'hui", "Hier", otherwise "jeu. 12 nov." for a YYYY-MM-DD key. */
+export function dayLabelFr(key: string, today: string = todayKey()) {
+  if (key === today) return "Aujourd'hui";
+  const d = new Date(key + "T00:00:00Z");
+  const y = new Date(today + "T00:00:00Z");
+  y.setUTCDate(y.getUTCDate() - 1);
+  if (d.getTime() === y.getTime()) return "Hier";
+  return d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+}
+
+/** "novembre 2026" for a YYYY-MM key. */
+export function monthLabelFr(month: string, style: "long" | "short" = "long") {
+  const d = new Date(month + "-01T00:00:00Z");
+  return d.toLocaleDateString("fr-FR", {
+    month: style,
+    year: style === "long" ? "numeric" : "2-digit",
+    timeZone: "UTC",
+  });
+}
+
+/** Groups rows (already sorted newest first) by a YYYY-MM-DD field. */
+export function groupByDay<T>(rows: T[], dateOf: (r: T) => string) {
+  const out: { date: string; rows: T[] }[] = [];
+  for (const r of rows) {
+    const k = dateOf(r);
+    const last = out[out.length - 1];
+    if (last && last.date === k) last.rows.push(r);
+    else out.push({ date: k, rows: [r] });
+  }
+  return out;
+}

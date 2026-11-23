@@ -1,11 +1,11 @@
 import { requireUserAndBusiness } from "@/lib/data";
 import { hasProducts, hasServices } from "@/lib/niches";
-import { todayKey } from "@/lib/format";
+import { todayKey, fmt, dayLabelFr, groupByDay } from "@/lib/format";
 import VenteClient from "@/components/VenteClient";
 import RdvClient from "@/components/RdvClient";
 import ManualSaleForm from "@/components/ManualSaleForm";
 import SaleRow from "@/components/SaleRow";
-import { EyebrowLabel, EmptyNote } from "@/components/ui";
+import { Card, EmptyState, Icon, PageHeader, SectionHeader } from "@/components/ui";
 import type { Product, ServiceItem, AppointmentSlot } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -15,16 +15,10 @@ export default async function VentePage() {
   const showProducts = hasProducts(business.type);
   const showServices = hasServices(business.type);
 
-  // All four lookups are independent, so they run together instead of
-  // products first and everything else after it.
+  // All four lookups are independent, so they run together.
   const [{ data: products }, { data: services }, { data: slots }, { data: recentSales }] = await Promise.all([
     showProducts
-      ? supabase
-          .from("products")
-          .select("*")
-          .eq("business_id", business.id)
-          .order("category")
-          .returns<Product[]>()
+      ? supabase.from("products").select("*").eq("business_id", business.id).order("category").returns<Product[]>()
       : Promise.resolve({ data: [] as Product[] }),
     showServices
       ? supabase.from("services").select("*").eq("business_id", business.id).returns<ServiceItem[]>()
@@ -44,36 +38,57 @@ export default async function VentePage() {
       .eq("business_id", business.id)
       .order("sale_date", { ascending: false })
       .order("created_at", { ascending: false })
-      .limit(15),
+      .limit(20),
   ]);
+
+  const days = groupByDay(recentSales || [], (s) => s.sale_date);
 
   return (
     <div>
-      <p className="text-xs uppercase tracking-widest text-muted mb-1">
-        {showProducts ? "Nouvelle vente" : "Rendez-vous"}
-      </p>
-      <h1 className="font-display text-[26px] leading-tight font-semibold mb-5">{business.name}</h1>
+      <PageHeader
+        eyebrow={showProducts ? "Nouvelle vente" : "Rendez-vous"}
+        title={showProducts ? "Encaisser" : "Agenda du jour"}
+        subtitle={business.name}
+      />
 
       {showProducts && (products?.length ?? 0) > 0 && (
         <VenteClient products={products!} currency={business.currency} trackStock={business.track_stock} />
       )}
       {showProducts && (products?.length ?? 0) === 0 && (
-        <p className="text-sm text-muted mb-6">
-          Aucun produit au catalogue. Ajoutez-en depuis l&apos;onglet Catalogue.
-        </p>
+        <Card className="mb-6">
+          <EmptyState
+            icon={<Icon name="box" size={20} />}
+            title="Aucun produit au catalogue"
+            hint="Ajoutez vos produits depuis l'onglet Catalogue pour commencer à vendre."
+          />
+        </Card>
       )}
 
       {showServices && <RdvClient services={services || []} takenSlots={slots || []} currency={business.currency} />}
 
       <ManualSaleForm currency={business.currency} />
 
-      <EyebrowLabel>Ventes récentes</EyebrowLabel>
-      {!recentSales || recentSales.length === 0 ? (
-        <EmptyNote>Aucune vente enregistrée.</EmptyNote>
+      <SectionHeader title="Ventes récentes" aside={recentSales?.length ? `${recentSales.length} dernières` : undefined} />
+      {days.length === 0 ? (
+        <Card>
+          <EmptyState icon={<Icon name="sales" size={20} />} title="Aucune vente enregistrée" />
+        </Card>
       ) : (
-        <div className="space-y-2">
-          {recentSales.map((s) => (
-            <SaleRow key={s.id} sale={s} currency={business.currency} />
+        <div className="space-y-5">
+          {days.map((d) => (
+            <section key={d.date}>
+              <div className="flex items-baseline justify-between px-1 mb-2 gap-3">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted capitalize">{dayLabelFr(d.date)}</p>
+                <p className="font-mono text-xs text-muted shrink-0">
+                  {fmt(d.rows.reduce((n, s) => n + s.total, 0), business.currency)}
+                </p>
+              </div>
+              <div className="space-y-2">
+                {d.rows.map((s) => (
+                  <SaleRow key={s.id} sale={s} currency={business.currency} />
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       )}

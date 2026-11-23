@@ -1,9 +1,10 @@
 import { requireUserAndBusiness } from "@/lib/data";
 import { fmt } from "@/lib/format";
 import { hasProducts, hasServices } from "@/lib/niches";
-import { Card, EyebrowLabel } from "@/components/ui";
-import { addProduct, addService, deleteService, setTrackStock } from "../actions";
+import { Card, EmptyState, Field, Icon, PageHeader, SectionHeader, primaryBtn } from "@/components/ui";
+import { addProduct, addService, deleteService } from "../actions";
 import ProductRow from "@/components/ProductRow";
+import TrackStockToggle from "@/components/TrackStockToggle";
 import type { Product, ServiceItem } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -27,113 +28,120 @@ export default async function CataloguePage() {
       : Promise.resolve({ data: [] as ServiceItem[] }),
   ]);
 
+  const parts = [
+    showProducts ? `${products?.length ?? 0} produit${(products?.length ?? 0) > 1 ? "s" : ""}` : null,
+    showServices ? `${services?.length ?? 0} service${(services?.length ?? 0) > 1 ? "s" : ""}` : null,
+  ].filter(Boolean);
+
   return (
     <div>
-      <p className="text-xs uppercase tracking-widest text-muted mb-1">Catalogue</p>
-      <h1 className="font-display text-[26px] leading-tight font-semibold mb-5">
-        {(products?.length ?? 0)} produits · {(services?.length ?? 0)} services
-      </h1>
+      <PageHeader eyebrow="Catalogue" title="Ce que vous vendez" subtitle={parts.join(" · ")} />
 
       {showProducts && (
         <>
-          <Card className="mb-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium">Suivi du stock</p>
-                <p className="text-xs text-muted mt-0.5">
-                  {business.track_stock
-                    ? "Chaque vente diminue le stock du produit."
-                    : "Désactivé — utile pour un restaurant où les plats ne sont pas comptés en stock."}
-                </p>
-              </div>
-              <form action={setTrackStock.bind(null, !business.track_stock)}>
-                <button
-                  type="submit"
-                  className={`shrink-0 text-xs font-medium px-3 py-1.5 rounded-full ${
-                    business.track_stock ? "bg-green-soft text-green" : "bg-line text-muted"
-                  }`}
-                >
-                  {business.track_stock ? "Activé" : "Désactivé"}
-                </button>
-              </form>
-            </div>
+          <Card>
+            <TrackStockToggle initial={business.track_stock} />
           </Card>
 
-          <Card data-tour="catalogue-form">
-            <p className="text-xs uppercase tracking-widest text-muted mb-3">Nouveau produit</p>
-            <form action={addProduct} className="space-y-3">
-              <input name="name" placeholder="Nom" required className="w-full border border-line rounded-lg px-3 py-2 bg-cream" />
-              <input name="category" placeholder="Catégorie (ex. Plats)" className="w-full border border-line rounded-lg px-3 py-2 bg-cream" />
-              <div className="flex gap-3">
-                <input
-                  name="price"
-                  type="number"
-                  placeholder={`Prix (${business.currency})`}
-                  required
-                  className={business.track_stock ? "w-1/2 border border-line rounded-lg px-3 py-2 bg-cream" : "w-full border border-line rounded-lg px-3 py-2 bg-cream"}
-                />
+          <Card className="mt-3" data-tour="catalogue-form">
+            <p className="font-display font-semibold mb-4">Nouveau produit</p>
+            <form action={addProduct} className="space-y-4">
+              <Field label="Nom">
+                <input name="name" placeholder="ex. Thieboudienne" required className="field" />
+              </Field>
+              <Field label="Catégorie" hint="Regroupe les produits sur l'écran de vente.">
+                <input name="category" placeholder="ex. Plats" className="field" />
+              </Field>
+              <div className={`grid gap-3 ${business.track_stock ? "grid-cols-2" : "grid-cols-1"}`}>
+                <Field label={`Prix (${business.currency})`}>
+                  <input name="price" type="number" inputMode="numeric" min={0} placeholder="2500" required className="field font-mono" />
+                </Field>
                 {business.track_stock && (
-                  <input name="stock" type="number" placeholder="Stock initial" className="w-1/2 border border-line rounded-lg px-3 py-2 bg-cream" />
+                  <Field label="Stock initial">
+                    <input name="stock" type="number" inputMode="numeric" min={0} placeholder="20" className="field font-mono" />
+                  </Field>
                 )}
               </div>
-              <button type="submit" className="w-full bg-ochre text-white rounded-lg py-2.5 font-medium">
+              <button type="submit" className={primaryBtn}>
                 Ajouter au catalogue
               </button>
             </form>
           </Card>
 
-          {groupByCat(products || []).map((g) => (
-            <div key={g.category}>
-              <EyebrowLabel>{g.category}</EyebrowLabel>
-              <div className="space-y-2">
-                {g.items.map((p) => (
-                  <ProductRow key={p.id} product={p} currency={business.currency} trackStock={business.track_stock} />
-                ))}
-              </div>
-            </div>
-          ))}
+          {(products?.length ?? 0) === 0 ? (
+            <Card className="mt-6">
+              <EmptyState
+                icon={<Icon name="box" size={20} />}
+                title="Votre catalogue est vide"
+                hint="Ajoutez un premier produit pour pouvoir l'encaisser."
+              />
+            </Card>
+          ) : (
+            groupByCat(products || []).map((g) => (
+              <section key={g.category}>
+                <SectionHeader title={g.category} aside={g.items.length} />
+                <div className="space-y-2">
+                  {g.items.map((p) => (
+                    <ProductRow key={p.id} product={p} currency={business.currency} trackStock={business.track_stock} />
+                  ))}
+                </div>
+              </section>
+            ))
+          )}
         </>
       )}
 
       {showServices && (
         <>
-          <div className="mt-8">
-            <Card data-tour="catalogue-form">
-              <p className="text-xs uppercase tracking-widest text-muted mb-3">Nouveau service</p>
-              <form action={addService} className="space-y-3">
-                <input name="name" placeholder="Nom" required className="w-full border border-line rounded-lg px-3 py-2 bg-cream" />
-                <input name="category" placeholder="Catégorie (ex. Coiffure)" className="w-full border border-line rounded-lg px-3 py-2 bg-cream" />
-                <div className="flex gap-3">
-                  <input name="duration" placeholder="Durée (ex. 45 min)" className="w-1/2 border border-line rounded-lg px-3 py-2 bg-cream" />
-                  <input name="price" type="number" placeholder={`Prix (${business.currency})`} required className="w-1/2 border border-line rounded-lg px-3 py-2 bg-cream" />
-                </div>
-                <button type="submit" className="w-full bg-ochre text-white rounded-lg py-2.5 font-medium">
-                  Ajouter au catalogue
-                </button>
-              </form>
-            </Card>
-          </div>
+          <Card className={showProducts ? "mt-10" : ""} data-tour="catalogue-form">
+            <p className="font-display font-semibold mb-4">Nouveau service</p>
+            <form action={addService} className="space-y-4">
+              <Field label="Nom">
+                <input name="name" placeholder="ex. Coupe + brushing" required className="field" />
+              </Field>
+              <Field label="Catégorie">
+                <input name="category" placeholder="ex. Coiffure" className="field" />
+              </Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Durée">
+                  <input name="duration" placeholder="45 min" className="field" />
+                </Field>
+                <Field label={`Prix (${business.currency})`}>
+                  <input name="price" type="number" inputMode="numeric" min={0} placeholder="5000" required className="field font-mono" />
+                </Field>
+              </div>
+              <button type="submit" className={primaryBtn}>
+                Ajouter au catalogue
+              </button>
+            </form>
+          </Card>
 
           {groupByCat(services || []).map((g) => (
-            <div key={g.category}>
-              <EyebrowLabel>{g.category}</EyebrowLabel>
+            <section key={g.category}>
+              <SectionHeader title={g.category} aside={g.items.length} />
               <div className="space-y-2">
                 {g.items.map((s) => (
-                  <div key={s.id} className="flex justify-between items-center gap-2 bg-card border border-line rounded-xl px-3.5 py-2.5">
-                    <div className="min-w-0">
-                      <p className="text-sm truncate">{s.name}</p>
-                      <p className="text-xs text-muted truncate">{fmt(s.price, business.currency)}</p>
+                  <div key={s.id} className="flex items-center gap-3 bg-card border border-line rounded-2xl card-surface px-3.5 py-3 min-w-0">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">{s.name}</p>
+                      <p className="font-mono text-xs text-muted mt-0.5 truncate">{fmt(s.price, business.currency)}</p>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-xs px-2 py-1 rounded-full bg-indigo-soft text-indigo whitespace-nowrap">{s.duration}</span>
-                      <form action={deleteService.bind(null, s.id)}>
-                        <button className="text-muted px-1">✕</button>
-                      </form>
-                    </div>
+                    {s.duration && (
+                      <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-indigo-soft text-indigo whitespace-nowrap shrink-0">
+                        {s.duration}
+                      </span>
+                    )}
+                    <form action={deleteService.bind(null, s.id)} className="-mr-1.5 shrink-0">
+                      <button className="w-9 h-9 flex items-center justify-center text-muted" aria-label={`Supprimer ${s.name}`}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V4h6v3" />
+                        </svg>
+                      </button>
+                    </form>
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
           ))}
         </>
       )}

@@ -3,6 +3,7 @@
 import { useId, useState, useTransition } from "react";
 import { updateExpense, deleteExpense } from "@/app/(app)/actions";
 import { fmt, todayKey } from "@/lib/format";
+import { Field, ghostBtn } from "@/components/ui";
 import type { Expense } from "@/lib/types";
 
 export default function ExpenseRow({
@@ -15,6 +16,7 @@ export default function ExpenseRow({
   suggestions: string[];
 }) {
   const listId = useId();
+  const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [pending, startTransition] = useTransition();
   const [date, setDate] = useState(expense.expense_date);
@@ -26,6 +28,7 @@ export default function ExpenseRow({
     startTransition(async () => {
       await updateExpense({ expenseId: expense.id, date, category, amount: Number(amount) || 0, note });
       setEditing(false);
+      setOpen(false);
     });
   }
 
@@ -38,53 +41,50 @@ export default function ExpenseRow({
 
   if (editing) {
     return (
-      <div className="bg-card border border-line rounded-2xl card-surface px-3.5 py-3 space-y-2">
-        <div className="grid grid-cols-2 gap-2">
-          <input
-            type="date"
-            value={date}
-            max={todayKey()}
-            onChange={(e) => setDate(e.target.value)}
-            className="border border-line rounded-lg px-2.5 py-1.5 bg-cream text-sm"
-          />
+      <div className="bg-card border border-line rounded-2xl card-surface p-3.5 space-y-3 row-in">
+        <Field label="Quelle dépense ?">
           <input
             list={listId}
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             maxLength={60}
-            placeholder="Quelle dépense ?"
-            className="border border-line rounded-lg px-2.5 py-1.5 bg-cream text-sm"
+            className="field"
           />
-          <datalist id={listId}>
-            {suggestions.map((c) => (
-              <option key={c} value={c} />
-            ))}
-          </datalist>
+        </Field>
+        <datalist id={listId}>
+          {suggestions.map((c) => (
+            <option key={c} value={c} />
+          ))}
+        </datalist>
+        <div className="grid grid-cols-5 gap-3">
+          <div className="col-span-3 min-w-0">
+            <Field label={`Montant (${currency})`}>
+              <input
+                type="number"
+                inputMode="numeric"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="field font-mono"
+              />
+            </Field>
+          </div>
+          <div className="col-span-2 min-w-0">
+            <Field label="Date">
+              <input type="date" value={date} max={todayKey()} onChange={(e) => setDate(e.target.value)} className="field px-2" />
+            </Field>
+          </div>
         </div>
-        <input
-          type="number"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          placeholder={`Montant (${currency})`}
-          className="w-full border border-line rounded-lg px-2.5 py-1.5 bg-cream text-sm"
-        />
-        <input
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder="Note (optionnel)"
-          className="w-full border border-line rounded-lg px-2.5 py-1.5 bg-cream text-sm"
-        />
+        <Field label="Note">
+          <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optionnel" className="field" />
+        </Field>
         <div className="flex gap-2 pt-1">
-          <button
-            onClick={() => setEditing(false)}
-            className="flex-1 border border-line rounded-lg py-2 text-sm font-medium"
-          >
+          <button onClick={() => setEditing(false)} className={`${ghostBtn} flex-1`}>
             Annuler
           </button>
           <button
             onClick={save}
             disabled={pending || !amount || !category.trim()}
-            className="flex-1 bg-ochre text-white rounded-lg py-2 text-sm font-medium disabled:opacity-60"
+            className="flex-1 h-10 rounded-xl bg-ochre text-sm font-medium disabled:opacity-50"
           >
             {pending ? "…" : "Enregistrer"}
           </button>
@@ -94,23 +94,36 @@ export default function ExpenseRow({
   }
 
   return (
-    <div className="flex justify-between items-center gap-2 bg-card border border-line rounded-2xl card-surface px-3.5 py-2.5">
-      <div className="min-w-0">
-        <p className="text-sm">{expense.category}</p>
-        <p className="text-xs text-muted truncate">
-          {expense.expense_date}
-          {expense.note ? ` · ${expense.note}` : ""}
-        </p>
-      </div>
-      <div className="flex items-center gap-2.5 shrink-0">
-        <span className="font-mono text-sm text-red">-{fmt(expense.amount, currency)}</span>
-        <button onClick={() => setEditing(true)} className="text-xs text-muted underline underline-offset-2">
-          Modifier
-        </button>
-        <button onClick={remove} className="text-xs text-red underline underline-offset-2">
-          Supprimer
-        </button>
-      </div>
+    <div className="bg-card border border-line rounded-2xl card-surface overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="w-full flex items-center gap-3 px-3.5 py-3 text-left min-w-0"
+      >
+        <span
+          className="w-9 h-9 shrink-0 rounded-full bg-red-soft text-red flex items-center justify-center font-display font-semibold text-sm"
+          aria-hidden
+        >
+          {expense.category.trim().charAt(0).toUpperCase() || "?"}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-medium truncate">{expense.category}</span>
+          {expense.note && <span className="block text-xs text-muted truncate">{expense.note}</span>}
+        </span>
+        <span className="font-mono text-sm text-red shrink-0">−{fmt(expense.amount, currency)}</span>
+      </button>
+      {open && (
+        <div className="row-in flex border-t border-line text-sm">
+          <button onClick={() => setEditing(true)} className="flex-1 py-2.5 font-medium text-ink">
+            Modifier
+          </button>
+          <span className="w-px bg-line" />
+          <button onClick={remove} disabled={pending} className="flex-1 py-2.5 font-medium text-red disabled:opacity-50">
+            {pending ? "…" : "Supprimer"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

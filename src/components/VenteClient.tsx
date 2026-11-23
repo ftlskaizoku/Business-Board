@@ -3,7 +3,51 @@
 import { useState, useTransition } from "react";
 import { fmt } from "@/lib/format";
 import { checkout } from "@/app/(app)/actions";
+import { primaryBtn } from "@/components/ui";
 import type { Product } from "@/lib/types";
+
+const NAV_OFFSET = "calc(4rem + env(safe-area-inset-bottom))";
+
+function Stepper({
+  qty,
+  onChange,
+  size = "md",
+}: {
+  qty: number;
+  onChange: (q: number) => void;
+  size?: "sm" | "md";
+}) {
+  const btn = size === "sm" ? "w-7 h-7 text-base" : "w-9 h-9 text-lg";
+  return (
+    <div className="flex items-center gap-1.5">
+      <button
+        type="button"
+        onClick={() => onChange(qty - 1)}
+        className={`${btn} rounded-full border border-line bg-card flex items-center justify-center leading-none`}
+        aria-label="Diminuer la quantité"
+      >
+        −
+      </button>
+      <input
+        type="number"
+        inputMode="numeric"
+        min={1}
+        value={qty}
+        onChange={(e) => onChange(Number(e.target.value) || 0)}
+        aria-label="Quantité"
+        className="w-11 h-9 text-center border border-line rounded-xl bg-cream font-mono text-sm outline-none focus:border-ochre"
+      />
+      <button
+        type="button"
+        onClick={() => onChange(qty + 1)}
+        className={`${btn} rounded-full border border-line bg-card flex items-center justify-center leading-none`}
+        aria-label="Augmenter la quantité"
+      >
+        +
+      </button>
+    </div>
+  );
+}
 
 export default function VenteClient({
   products,
@@ -25,38 +69,27 @@ export default function VenteClient({
   }, 0);
   const itemCount = Object.values(cart).reduce((s, q) => s + q, 0);
 
-  function addToCart(p: Product) {
-    setCart((c) => ({ ...c, [p.id]: (c[p.id] || 0) + 1 }));
-  }
-
-  function setQty(p: Product, qty: number) {
-    const clamped = Math.max(0, qty);
+  function setQty(productId: string, qty: number) {
+    const clamped = Math.max(0, Math.round(qty));
     setCart((c) => {
       if (clamped <= 0) {
         const next = { ...c };
-        delete next[p.id];
+        delete next[productId];
         return next;
       }
-      return { ...c, [p.id]: clamped };
-    });
-  }
-
-  function removeFromCart(productId: string) {
-    setCart((c) => {
-      const next = { ...c };
-      delete next[productId];
-      return next;
+      return { ...c, [productId]: clamped };
     });
   }
 
   function handleCheckout() {
     const items = Object.entries(cart).map(([productId, qty]) => ({ productId, qty }));
+    const paid = total;
     startTransition(async () => {
       await checkout(items);
       setCart({});
       setDrawerOpen(false);
-      setMessage(`Vente enregistrée · ${fmt(total, currency)}`);
-      setTimeout(() => setMessage(null), 2000);
+      setMessage(`Vente enregistrée · ${fmt(paid, currency)}`);
+      setTimeout(() => setMessage(null), 2200);
     });
   }
 
@@ -68,141 +101,126 @@ export default function VenteClient({
   const cartLines = Object.entries(cart)
     .map(([productId, qty]) => {
       const p = products.find((x) => x.id === productId);
-      if (!p) return null;
-      return { product: p, qty };
+      return p ? { product: p, qty } : null;
     })
     .filter((l): l is { product: Product; qty: number } => !!l);
 
   return (
-    <div className="pb-20" data-tour="vente-grid">
+    <div className={itemCount > 0 ? "pb-24" : ""} data-tour="vente-grid">
       {groups.map((g) => (
-        <div key={g.category} className="mb-5">
-          <p className="text-xs uppercase tracking-widest text-muted mb-2">{g.category}</p>
+        <section key={g.category} className="mb-6">
+          <h2 className="text-xs font-medium uppercase tracking-wider text-muted mb-2.5 px-1">{g.category}</h2>
           <div className="grid grid-cols-2 gap-2.5">
             {g.items.map((p) => {
               const inCart = cart[p.id] || 0;
+              const soldOut = trackStock && p.stock <= 0;
               return (
-                <button
+                <div
                   key={p.id}
-                  onClick={() => addToCart(p)}
-                  className="text-left bg-card border border-line rounded-2xl card-surface p-3.5 relative transition-shadow active:shadow-none"
+                  className={`relative bg-card border rounded-2xl card-surface min-w-0 transition-colors ${
+                    inCart > 0 ? "border-ochre" : "border-line"
+                  } ${soldOut ? "opacity-60" : ""}`}
                 >
-                  <p className="text-sm font-medium">{p.name}</p>
-                  <p className="text-xs text-muted mt-0.5">
-                    {fmt(p.price, currency)}
-                    {trackStock && <span className="ml-1.5">· {p.stock} en stock</span>}
-                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setQty(p.id, inCart + 1)}
+                    disabled={soldOut}
+                    className="w-full text-left p-3.5 pb-3 min-w-0"
+                  >
+                    <p className="text-sm font-medium leading-snug line-clamp-2 break-words pr-6">{p.name}</p>
+                    <p className="font-mono text-[13px] mt-1.5">{fmt(p.price, currency)}</p>
+                    {trackStock && (
+                      <p className={`text-[11px] mt-0.5 ${p.stock < 5 ? "text-red" : "text-muted"}`}>
+                        {soldOut ? "Rupture" : `${p.stock} en stock`}
+                      </p>
+                    )}
+                  </button>
                   {inCart > 0 && (
-                    <span className="absolute top-2 right-2 bg-ochre text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
+                    <span className="absolute top-2.5 right-2.5 min-w-6 h-6 px-1.5 rounded-full bg-ochre text-[11px] font-mono font-medium flex items-center justify-center">
                       {inCart}
                     </span>
                   )}
-                </button>
+                </div>
               );
             })}
           </div>
-        </div>
+        </section>
       ))}
 
       {message && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-ink text-white text-xs px-4 py-2 rounded-full z-30">
-          {message}
+        <div
+          role="status"
+          className="toast-in fixed left-1/2 z-30 bg-ink text-cream text-sm px-4 py-2.5 rounded-full shadow-lg whitespace-nowrap"
+          style={{ bottom: `calc(${NAV_OFFSET} + 0.75rem)` }}
+        >
+          ✓ {message}
         </div>
       )}
 
       {itemCount > 0 && !drawerOpen && (
-        <div className="fixed bottom-16 left-0 right-0 bg-ochre text-white flex items-stretch z-10">
-          <button
-            onClick={() => setDrawerOpen(true)}
-            className="flex-1 py-3.5 px-6 text-left border-r border-white/25"
-          >
-            <span className="block text-[10px] uppercase tracking-widest opacity-80">Modifier</span>
-            <span className="font-medium">
-              {itemCount} article{itemCount > 1 ? "s" : ""}
-            </span>
-          </button>
-          <button
-            onClick={handleCheckout}
-            disabled={pending}
-            className="flex-1 py-3.5 px-6 text-right font-medium disabled:opacity-70"
-          >
-            {pending ? "…" : `Encaisser · ${fmt(total, currency)}`}
-          </button>
+        <div className="fixed inset-x-0 z-10 px-4 pointer-events-none" style={{ bottom: `calc(${NAV_OFFSET} + 0.625rem)` }}>
+          <div className="row-in pointer-events-auto max-w-2xl mx-auto bg-ochre rounded-2xl flex items-stretch overflow-hidden shadow-[0_12px_28px_-10px_var(--color-ochre)]">
+            <button onClick={() => setDrawerOpen(true)} className="px-4 py-3 text-left border-r border-white/25 min-w-0">
+              <span className="block text-[10px] uppercase tracking-widest opacity-80">Panier</span>
+              <span className="font-medium text-sm">
+                {itemCount} article{itemCount > 1 ? "s" : ""}
+              </span>
+            </button>
+            <button
+              onClick={handleCheckout}
+              disabled={pending}
+              className="flex-1 min-w-0 px-4 py-3 text-right font-medium disabled:opacity-70 truncate"
+            >
+              {pending ? "…" : `Encaisser · ${fmt(total, currency)}`}
+            </button>
+          </div>
         </div>
       )}
 
       {drawerOpen && (
-        <div className="fixed inset-0 z-20 flex flex-col justify-end">
-          <div
-            className="absolute inset-0 bg-ink/40"
-            onClick={() => setDrawerOpen(false)}
-          />
-          <div className="relative bg-card rounded-t-2xl border-t border-line max-h-[75vh] flex flex-col">
-            <div className="px-5 pt-4 pb-2 flex items-center justify-between border-b border-line">
-              <p className="font-display font-semibold">Panier</p>
-              <button onClick={() => setDrawerOpen(false)} className="text-muted text-sm">
+        <div className="fixed inset-0 z-30 flex flex-col justify-end" role="dialog" aria-modal="true" aria-label="Panier">
+          <div className="absolute inset-0 bg-ink/40" onClick={() => setDrawerOpen(false)} />
+          <div className="sheet-up relative bg-card rounded-t-3xl border-t border-line max-h-[80vh] flex flex-col max-w-2xl w-full mx-auto">
+            <div className="pt-2.5 flex justify-center">
+              <span className="w-10 h-1 rounded-full bg-line" />
+            </div>
+            <div className="px-5 pt-3 pb-3 flex items-center justify-between">
+              <p className="font-display font-semibold text-lg">Panier</p>
+              <button onClick={() => setDrawerOpen(false)} className="text-muted text-sm h-9 px-2">
                 Fermer
               </button>
             </div>
 
-            <div className="overflow-y-auto px-5 py-3 flex-1">
-              {cartLines.length === 0 && (
-                <p className="text-sm text-muted text-center py-6">Panier vide.</p>
-              )}
+            <div className="overflow-y-auto px-5 flex-1 border-t border-line">
+              {cartLines.length === 0 && <p className="text-sm text-muted text-center py-8">Panier vide.</p>}
               {cartLines.map(({ product, qty }) => (
-                <div key={product.id} className="flex items-center justify-between py-3 border-b border-line last:border-0">
-                  <div className="min-w-0 pr-3">
+                <div key={product.id} className="py-3.5 border-b border-line last:border-0">
+                  <div className="flex items-baseline justify-between gap-3 min-w-0">
                     <p className="text-sm font-medium truncate">{product.name}</p>
-                    <p className="text-xs text-muted mt-0.5">
-                      {fmt(product.price, currency)} × {qty} = {fmt(product.price * qty, currency)}
-                    </p>
+                    <p className="font-mono text-sm shrink-0">{fmt(product.price * qty, currency)}</p>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      onClick={() => setQty(product, qty - 1)}
-                      className="w-8 h-8 rounded-full border border-line flex items-center justify-center text-lg leading-none"
-                      aria-label="Diminuer la quantité"
-                    >
-                      −
-                    </button>
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      min={1}
-                      value={qty}
-                      onChange={(e) => setQty(product, Number(e.target.value) || 0)}
-                      className="w-12 text-center border border-line rounded-lg py-1 bg-cream font-mono text-sm outline-none focus:border-ochre"
-                    />
-                    <button
-                      onClick={() => setQty(product, qty + 1)}
-                      className="w-8 h-8 rounded-full border border-line flex items-center justify-center text-lg leading-none disabled:opacity-30"
-                      aria-label="Augmenter la quantité"
-                    >
-                      +
-                    </button>
-                    <button
-                      onClick={() => removeFromCart(product.id)}
-                      className="text-red text-xs ml-1"
-                      aria-label="Retirer du panier"
-                    >
-                      Retirer
-                    </button>
+                  <div className="flex items-center justify-between mt-2 gap-3">
+                    <p className="text-xs text-muted font-mono">
+                      {fmt(product.price, currency)} × {qty}
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <Stepper qty={qty} onChange={(q) => setQty(product.id, q)} size="sm" />
+                      <button onClick={() => setQty(product.id, 0)} className="text-red text-xs" aria-label="Retirer du panier">
+                        Retirer
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="px-5 py-4 border-t border-line">
+            <div className="px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-line">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm text-muted">Total</span>
-                <span className="font-mono text-lg font-medium">{fmt(total, currency)}</span>
+                <span className="font-mono text-xl font-medium">{fmt(total, currency)}</span>
               </div>
-              <button
-                onClick={handleCheckout}
-                disabled={pending || itemCount === 0}
-                className="w-full bg-ochre text-white rounded-lg py-3 font-medium disabled:opacity-40"
-              >
-                {pending ? "…" : "Encaisser"}
+              <button onClick={handleCheckout} disabled={pending || itemCount === 0} className={primaryBtn}>
+                {pending ? "Enregistrement…" : "Encaisser"}
               </button>
             </div>
           </div>

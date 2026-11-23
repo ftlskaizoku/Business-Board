@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { addManualSale } from "@/app/(app)/actions";
 import { todayKey } from "@/lib/format";
-import { Card } from "@/components/ui";
+import { Card, Field, primaryBtn } from "@/components/ui";
 
 // Catch-up entry for a sale made before the shop used the app, or on a day
 // it simply wasn't recorded — a total amount against a past date, no
@@ -17,66 +17,55 @@ export default function ManualSaleForm({ currency }: { currency: string }) {
     startTransition(async () => {
       await addManualSale(formData);
       setOpen(false);
-      setMessage("Vente enregistrée");
-      setTimeout(() => setMessage(null), 2000);
+      setMessage("✓ Vente enregistrée");
+      setTimeout(() => setMessage(null), 2200);
     });
   }
 
   if (!open) {
     return (
-      <div className="mt-6 mb-2 text-center">
-        <button onClick={() => setOpen(true)} className="text-sm text-muted underline underline-offset-2">
-          Enregistrer une vente passée (jour précédent)
+      <div className="mt-2 mb-2">
+        <button
+          onClick={() => setOpen(true)}
+          className="w-full h-12 rounded-2xl border border-dashed border-line text-sm text-muted flex items-center justify-center gap-2 bg-card/50"
+        >
+          <span className="text-base leading-none">＋</span> Ajouter une vente d&apos;un jour passé
         </button>
-        {message && <p className="text-xs text-green mt-2">{message}</p>}
+        {message && (
+          <p role="status" className="text-xs text-green text-center mt-2">
+            {message}
+          </p>
+        )}
       </div>
     );
   }
 
   return (
-    <Card className="mt-6">
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-xs uppercase tracking-widest text-muted">Vente passée</p>
-        <button onClick={() => setOpen(false)} className="text-muted text-xs">
+    <Card className="row-in mt-2">
+      <div className="flex items-center justify-between mb-4">
+        <p className="font-display font-semibold">Vente d&apos;un jour passé</p>
+        <button onClick={() => setOpen(false)} className="text-muted text-sm h-8 px-1">
           Annuler
         </button>
       </div>
-      <form action={handleSubmit} className="space-y-3">
-        <div>
-          <label className="block text-xs text-muted mb-1">Date de la vente</label>
-          <input
-            name="date"
-            type="date"
-            defaultValue={todayKey()}
-            max={todayKey()}
-            required
-            className="w-full border border-line rounded-lg px-3 py-2 bg-cream"
-          />
+      <form action={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-5 gap-3">
+          <div className="col-span-3 min-w-0">
+            <Field label={`Montant total (${currency})`}>
+              <input name="amount" type="number" inputMode="numeric" required min={1} placeholder="15000" className="field font-mono" />
+            </Field>
+          </div>
+          <div className="col-span-2 min-w-0">
+            <Field label="Date">
+              <input name="date" type="date" defaultValue={todayKey()} max={todayKey()} required className="field px-2" />
+            </Field>
+          </div>
         </div>
-        <div>
-          <label className="block text-xs text-muted mb-1">Montant total ({currency})</label>
-          <input
-            name="amount"
-            type="number"
-            required
-            placeholder="15000"
-            className="w-full border border-line rounded-lg px-3 py-2 bg-cream"
-          />
-        </div>
-        <div>
-          <label className="block text-xs text-muted mb-1">Note (optionnel)</label>
-          <input
-            name="note"
-            placeholder="ex. Ventes du samedi non enregistrées"
-            className="w-full border border-line rounded-lg px-3 py-2 bg-cream"
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={pending}
-          className="w-full bg-ink text-white rounded-lg py-2.5 font-medium disabled:opacity-60"
-        >
-          {pending ? "…" : "Enregistrer"}
+        <Field label="Note (optionnel)">
+          <input name="note" placeholder="ex. Ventes du samedi non enregistrées" className="field" />
+        </Field>
+        <button type="submit" disabled={pending} className={primaryBtn}>
+          {pending ? "Enregistrement…" : "Enregistrer"}
         </button>
       </form>
     </Card>

@@ -7,7 +7,7 @@ export default function SignOutButton() {
   const router = useRouter();
   return (
     <button
-      className="text-xs text-muted"
+      className="text-sm font-medium text-red h-9 px-1"
       onClick={async () => {
         const supabase = createClient();
         await supabase.auth.signOut();

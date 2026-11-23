@@ -1,166 +1,171 @@
 import Link from "next/link";
 import { requireUserAndBusiness } from "@/lib/data";
 import { ADMIN_EMAIL } from "@/lib/admin";
-import { nicheLabel, hasProducts } from "@/lib/niches";
-import { Card, EyebrowLabel } from "@/components/ui";
+import { nicheLabel, hasProducts, NICHES } from "@/lib/niches";
+import { SectionHeader } from "@/components/ui";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
 import RestartTourButton from "@/components/RestartTourButton";
 import TrackStockToggle from "@/components/TrackStockToggle";
 import SignOutButton from "@/components/SignOutButton";
+import InlineEdit from "@/components/InlineEdit";
 import { updateFullName, updateBusinessName } from "../actions";
 
 export const dynamic = "force-dynamic";
 
+/** Rounded block whose rows are separated by hairlines (iOS-settings style). */
+function Group({ children, ...rest }: { children: React.ReactNode } & React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div className="bg-card border border-line rounded-[20px] card-surface divide-y divide-line overflow-hidden" {...rest}>
+      {children}
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 px-4 py-3.5 min-w-0">
+      <span className="text-sm text-muted shrink-0">{label}</span>
+      <span className="text-sm font-medium truncate text-right">{value}</span>
+    </div>
+  );
+}
+
+function LinkRow({
+  title,
+  hint,
+  action,
+  tone = "ochre",
+}: {
+  title: string;
+  hint: string;
+  action: React.ReactNode;
+  tone?: "ochre" | "indigo";
+}) {
+  void tone;
+  return (
+    <div className="flex items-center justify-between gap-3 px-4 py-3.5 min-w-0">
+      <div className="min-w-0">
+        <p className="text-sm font-medium">{title}</p>
+        <p className="text-xs text-muted mt-0.5">{hint}</p>
+      </div>
+      {action}
+    </div>
+  );
+}
+
 export default async function ParametresPage() {
   const { user, business, profile } = await requireUserAndBusiness();
 
-  const isAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  const isAdmin = (user.email || "").trim().toLowerCase() === ADMIN_EMAIL.toLowerCase();
   const apkUrl = process.env.NEXT_PUBLIC_APK_URL || null;
   const memberSince = profile?.created_at
-    ? new Date(profile.created_at).toLocaleDateString("fr-FR", { month: "long", year: "numeric" })
+    ? new Date(profile.created_at).toLocaleDateString("fr-FR", { month: "long", year: "numeric", timeZone: "UTC" })
     : "—";
+  const displayName = profile?.full_name || profile?.email || "Votre compte";
 
   return (
     <div>
-      <p className="text-xs uppercase tracking-widest text-muted mb-1">Paramètres</p>
-      <h1 className="font-display text-[26px] leading-tight font-semibold mb-5">Votre compte</h1>
-
-      <EyebrowLabel>Informations personnelles</EyebrowLabel>
-      <Card>
-        <form action={updateFullName} className="space-y-3">
-          <div>
-            <label className="block text-xs text-muted mb-1">Nom complet</label>
-            <input
-              name="full_name"
-              defaultValue={profile?.full_name || ""}
-              required
-              className="w-full border border-line rounded-lg px-3 py-2 bg-cream"
-            />
-          </div>
-          <button type="submit" className="text-xs font-medium text-ochre underline underline-offset-2">
-            Enregistrer
-          </button>
-        </form>
-        <div className="mt-4 pt-4 border-t border-line space-y-1.5">
-          <p className="text-xs text-muted">
-            E-mail <span className="text-ink">{profile?.email || "—"}</span>
-          </p>
-          <p className="text-xs text-muted">
-            Téléphone <span className="text-ink">{profile?.phone || "—"}</span>
-          </p>
-          <p className="text-xs text-muted">
-            Membre depuis <span className="text-ink capitalize">{memberSince}</span>
+      {/* Identity block */}
+      <div className="flex items-center gap-4 mb-2 min-w-0">
+        <span className="w-16 h-16 shrink-0 rounded-[22px] bg-ochre-soft text-ochre flex items-center justify-center font-display text-2xl font-semibold">
+          {displayName.trim().charAt(0).toUpperCase()}
+        </span>
+        <div className="min-w-0">
+          <p className="text-xs uppercase tracking-widest text-muted font-medium">Paramètres</p>
+          <h1 className="font-display text-[24px] leading-tight font-semibold truncate">{displayName}</h1>
+          <p className="text-xs text-muted truncate mt-0.5">
+            {NICHES[business.niche].icon} {business.name} · depuis <span className="capitalize">{memberSince}</span>
           </p>
         </div>
-      </Card>
+      </div>
 
-      <EyebrowLabel>Votre commerce</EyebrowLabel>
-      <Card>
-        <form action={updateBusinessName} className="space-y-3">
-          <div>
-            <label className="block text-xs text-muted mb-1">Nom du commerce</label>
-            <input
-              name="name"
-              defaultValue={business.name}
-              required
-              className="w-full border border-line rounded-lg px-3 py-2 bg-cream"
-            />
-          </div>
-          <button type="submit" className="text-xs font-medium text-ochre underline underline-offset-2">
-            Enregistrer
-          </button>
-        </form>
-        <div className="mt-4 pt-4 border-t border-line space-y-1.5">
-          <p className="text-xs text-muted">
-            Activité <span className="text-ink">{nicheLabel(business.niche, business.custom_niche)}</span>
-          </p>
-          <p className="text-xs text-muted">
-            Devise <span className="text-ink">{business.currency}</span>
-          </p>
-        </div>
-      </Card>
+      <SectionHeader title="Profil" />
+      <Group>
+        <InlineEdit label="Nom complet" name="full_name" value={profile?.full_name || ""} action={updateFullName} />
+        <Row label="E-mail" value={profile?.email || "—"} />
+        <Row label="Téléphone" value={profile?.phone || "—"} />
+      </Group>
 
-      {hasProducts(business.type) && (
-        <>
-          <EyebrowLabel>Stock</EyebrowLabel>
-          <Card>
+      <SectionHeader title="Votre commerce" />
+      <Group>
+        <InlineEdit label="Nom du commerce" name="name" value={business.name} action={updateBusinessName} />
+        <Row label="Activité" value={nicheLabel(business.niche, business.custom_niche)} />
+        <Row label="Devise" value={business.currency} />
+        {hasProducts(business.type) && (
+          <div className="px-4 py-3.5">
             <TrackStockToggle initial={business.track_stock} />
-          </Card>
-        </>
-      )}
+          </div>
+        )}
+      </Group>
 
-      <EyebrowLabel>Apparence</EyebrowLabel>
-      <Card data-tour="parametres-theme">
+      <SectionHeader title="Apparence" />
+      <div className="bg-card border border-line rounded-[20px] card-surface p-4" data-tour="parametres-theme">
         <ThemeSwitcher />
-      </Card>
+      </div>
 
-      <EyebrowLabel>Application Android</EyebrowLabel>
-      <Card>
+      <SectionHeader title="Application" />
+      <Group>
         {apkUrl ? (
-          <>
-            <p className="text-sm font-medium mb-1">Télécharger le fichier APK</p>
-            <p className="text-xs text-muted mb-3">
-              Installez Business Board directement sur votre téléphone Android, en dehors du Play Store.
-              Android peut demander d&apos;autoriser l&apos;installation depuis des sources inconnues la
-              première fois — c&apos;est normal.
+          <div className="px-4 py-3.5">
+            <p className="text-sm font-medium">Application Android (APK)</p>
+            <p className="text-xs text-muted mt-1 mb-3 leading-relaxed">
+              Installez Business Board directement sur votre téléphone, hors Play Store. Android peut demander
+              d&apos;autoriser les sources inconnues la première fois — c&apos;est normal.
             </p>
-            <a
-              href={apkUrl}
-              download
-              className="inline-block bg-ochre text-white text-sm font-medium rounded-lg px-4 py-2.5"
-            >
+            <a href={apkUrl} download className="inline-flex items-center h-10 rounded-xl bg-ochre px-4 text-sm font-medium">
               Télécharger l&apos;APK
             </a>
-          </>
+          </div>
         ) : (
-          <>
-            <p className="text-sm font-medium mb-1">Bientôt disponible</p>
-            <p className="text-xs text-muted">
-              En attendant, vous pouvez ajouter Business Board à votre écran d&apos;accueil directement
-              depuis votre navigateur — la bannière d&apos;installation vous le proposera automatiquement.
+          <div className="px-4 py-3.5">
+            <p className="text-sm font-medium">Sur votre écran d&apos;accueil</p>
+            <p className="text-xs text-muted mt-1 leading-relaxed">
+              Ajoutez Business Board depuis votre navigateur : la bannière d&apos;installation vous le propose
+              automatiquement. Une version APK arrive bientôt.
             </p>
-          </>
+          </div>
         )}
-      </Card>
+      </Group>
 
-      <EyebrowLabel>Aide</EyebrowLabel>
-      <Card className="flex items-center justify-between mb-3">
-        <div>
-          <p className="text-sm font-medium">Visite guidée</p>
-          <p className="text-xs text-muted mt-0.5">Refaire le tour de l&apos;application, écran par écran.</p>
-        </div>
-        <RestartTourButton />
-      </Card>
-      <Card className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium">Comment utiliser Business Board</p>
-          <p className="text-xs text-muted mt-0.5">Guide écrit, à consulter à votre rythme.</p>
-        </div>
-        <Link href="/aide" className="text-xs font-medium text-ochre shrink-0">
-          Ouvrir →
-        </Link>
-      </Card>
+      <SectionHeader title="Aide" />
+      <Group>
+        <LinkRow
+          title="Visite guidée"
+          hint="Refaire le tour de l'application."
+          action={<RestartTourButton />}
+        />
+        <LinkRow
+          title="Comment utiliser Business Board"
+          hint="Guide écrit, à votre rythme."
+          action={
+            <Link href="/aide" className="text-xs font-medium text-ochre shrink-0 h-9 flex items-center">
+              Ouvrir →
+            </Link>
+          }
+        />
+      </Group>
 
       {isAdmin && (
         <>
-          <EyebrowLabel>Administration</EyebrowLabel>
-          <Card className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">Espace admin</p>
-              <p className="text-xs text-muted mt-0.5">Gérer les utilisateurs et voir tous les commerces.</p>
-            </div>
-            <Link href="/admin" className="text-xs font-medium text-indigo shrink-0">
-              Ouvrir →
-            </Link>
-          </Card>
+          <SectionHeader title="Administration" />
+          <Group>
+            <LinkRow
+              title="Espace admin"
+              hint="Utilisateurs et commerces de la plateforme."
+              action={
+                <Link href="/admin" className="text-xs font-medium text-indigo shrink-0 h-9 flex items-center">
+                  Ouvrir →
+                </Link>
+              }
+            />
+          </Group>
         </>
       )}
 
-      <EyebrowLabel>Compte</EyebrowLabel>
-      <Card className="flex items-center justify-between">
-        <p className="text-sm">Se déconnecter de Business Board</p>
-        <SignOutButton />
-      </Card>
+      <SectionHeader title="Compte" />
+      <Group>
+        <LinkRow title="Se déconnecter" hint={profile?.email || user.email || ""} action={<SignOutButton />} />
+      </Group>
     </div>
   );
 }
