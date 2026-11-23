@@ -75,7 +75,7 @@ export default function InstallPrompt() {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-16 left-0 right-0 z-30 px-4 pb-3">
+    <div className="fixed bottom-16 left-0 right-0 lg:bottom-4 lg:left-64 z-30 px-4 pb-3">
       <div className="max-w-2xl mx-auto bg-ink text-white rounded-xl p-3.5 flex items-start gap-3 shadow-lg">
         <span className="text-xl leading-none mt-0.5">📲</span>
         <div className="flex-1 min-w-0">

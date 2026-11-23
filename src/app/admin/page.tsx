@@ -56,7 +56,7 @@ export default async function AdminPage() {
   const nicheTotal = d.niches.reduce((s, n) => s + n.value, 0);
 
   return (
-    <main className="page-enter min-h-screen p-5 max-w-2xl mx-auto w-full pb-12">
+    <main className="page-enter min-h-screen p-5 max-w-2xl md:max-w-3xl lg:max-w-6xl lg:p-10 mx-auto w-full pb-12">
       <header className="flex items-center justify-between gap-3 mb-5">
         <span className="inline-flex items-center gap-1.5 text-[11px] font-medium rounded-full bg-indigo-soft text-indigo px-2.5 py-1">
           <span className="w-1.5 h-1.5 rounded-full bg-indigo" /> Admin
@@ -68,7 +68,7 @@ export default async function AdminPage() {
       <p className="text-sm text-muted mt-1">Toute la plateforme Business Board en un coup d&apos;œil.</p>
 
       {/* KPI grid */}
-      <div className="grid grid-cols-2 gap-3 mt-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-5">
         <Kpi
           label="Utilisateurs"
           value={String(d.usersCount)}
@@ -88,6 +88,8 @@ export default async function AdminPage() {
         <Kpi label="Nouveaux commerces" value={String(d.newBusinesses7)} sub="7 derniers jours" />
       </div>
 
+      <div className="lg:grid lg:grid-cols-12 lg:gap-x-8 lg:items-start">
+      <div className="lg:col-span-7 min-w-0">
       {/* Sales */}
       <Card className="mt-3">
         <div className="flex items-start justify-between gap-3">
@@ -130,6 +132,9 @@ export default async function AdminPage() {
         )}
       </Card>
 
+      </div>
+
+      <div className="lg:col-span-5 min-w-0">
       {/* Top businesses */}
       <EyebrowLabel>Classement des commerces · 7 j</EyebrowLabel>
       <div className="space-y-2.5">
@@ -158,6 +163,8 @@ export default async function AdminPage() {
       {d.top.length > 8 && (
         <p className="text-center text-xs text-muted mt-3">+ {d.top.length - 8} autres commerces</p>
       )}
+      </div>
+      </div>
 
       {/* Users */}
       <EyebrowLabel>Utilisateurs</EyebrowLabel>

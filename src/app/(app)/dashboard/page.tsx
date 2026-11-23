@@ -12,11 +12,12 @@ export default async function DashboardPage() {
   const today = todayKey();
   const showStock = hasProducts(business.type) && business.track_stock;
 
-  const [{ data: todaySales }, { data: todayExpenses }, { data: last7 }, { data: prev7 }, { data: stockRows }, { data: recentSales }] =
+  const [{ data: todaySales }, { data: todayExpenses }, { data: last7 }, { data: last7Expenses }, { data: prev7 }, { data: stockRows }, { data: recentSales }] =
     await Promise.all([
       supabase.from("sales").select("total").eq("business_id", business.id).eq("sale_date", today),
       supabase.from("expenses").select("amount").eq("business_id", business.id).eq("expense_date", today),
       supabase.from("sales").select("sale_date, total").eq("business_id", business.id).gte("sale_date", daysAgoKey(6)),
+      supabase.from("expenses").select("expense_date, amount").eq("business_id", business.id).gte("expense_date", daysAgoKey(6)),
       supabase
         .from("sales")
         .select("total")
@@ -50,6 +51,11 @@ export default async function DashboardPage() {
   (last7 || []).forEach((r: { sale_date: string; total: number }) => {
     dayTotals[r.sale_date] = (dayTotals[r.sale_date] || 0) + r.total;
   });
+  const dayExpenses: Record<string, number> = {};
+  (last7Expenses || []).forEach((r: { expense_date: string; amount: number }) => {
+    dayExpenses[r.expense_date] = (dayExpenses[r.expense_date] || 0) + r.amount;
+  });
+  const last7ExpensesSum = Object.values(dayExpenses).reduce((n, v) => n + v, 0);
   const trendPoints: TrendPoint[] = [];
   for (let i = 6; i >= 0; i--) {
     const key = daysAgoKey(i);
@@ -58,6 +64,7 @@ export default async function DashboardPage() {
       label: String(dt.getDate()),
       title: dt.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" }),
       a: dayTotals[key] || 0,
+      b: dayExpenses[key] || 0,
     });
   }
 
@@ -75,8 +82,8 @@ export default async function DashboardPage() {
     <div>
       <PageHeading eyebrow="Aujourd'hui" title="Bonjour" />
 
-      <div className="grid grid-cols-2 gap-3" data-tour="dashboard-metrics">
-        <Card className={`col-span-2 ${profit >= 0 ? "bg-green-soft" : "bg-red-soft"}`}>
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4" data-tour="dashboard-metrics">
+        <Card className={`col-span-2 lg:col-span-1 ${profit >= 0 ? "bg-green-soft border-green/30!" : "bg-red-soft border-red/30!"}`}>
           <div className="flex items-center gap-2 mb-1">
             <span
               className={`w-7 h-7 rounded-full bg-card flex items-center justify-center ${profit >= 0 ? "text-green" : "text-red"}`}
@@ -94,7 +101,7 @@ export default async function DashboardPage() {
         <Metric label="Dépenses du jour" value={fmt(expensesToday, business.currency)} icon={<Icon name="expense" />} />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mt-3">
+      <div className="grid grid-cols-2 gap-3 mt-3 lg:mt-4 lg:max-w-lg">
         <Link
           href="/vente"
           className="bg-ochre rounded-2xl py-3.5 text-sm font-medium text-center card-surface active:scale-[0.98] transition-transform"
@@ -109,6 +116,8 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
+      <div className="lg:grid lg:grid-cols-12 lg:gap-x-8 lg:items-start">
+      <div className="lg:col-span-7 min-w-0">
       <EyebrowLabel>Tendance 7 jours</EyebrowLabel>
       <Card>
         <div className="flex items-start justify-between gap-3 mb-2">
@@ -121,10 +130,18 @@ export default async function DashboardPage() {
             tone={weekDelta >= 0 ? "good" : "bad"}
           />
         </div>
-        <TrendChart points={trendPoints} currency={business.currency} aLabel="Ventes" />
-        <p className="text-[11px] text-muted mt-1">Touchez la courbe pour voir le détail d&apos;un jour. Comparé à la semaine précédente.</p>
+        <TrendChart points={trendPoints} currency={business.currency} aLabel="Ventes" bLabel="Dépenses" />
+        <div className="flex gap-4 mt-2 pt-3 border-t border-line text-[11px] text-muted">
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green inline-block" />Ventes</span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-red inline-block" />Dépenses {last7ExpensesSum > 0 && <span className="font-mono">· {fmt(last7ExpensesSum, business.currency)}</span>}
+          </span>
+          <span className="ml-auto">Touchez la courbe</span>
+        </div>
       </Card>
+      </div>
 
+      <div className="lg:col-span-5 min-w-0">
       <div className="flex items-center justify-between mt-7 mb-2.5">
         <p className="text-xs uppercase tracking-widest text-muted font-medium">Dernières ventes</p>
         <Link href="/vente" className="text-xs font-medium text-ochre">
@@ -209,6 +226,9 @@ export default async function DashboardPage() {
           )}
         </>
       )}
+
+      </div>
+      </div>
 
       <EmptyNote>Consultez l&apos;onglet Stats pour le calendrier et les tendances.</EmptyNote>
     </div>

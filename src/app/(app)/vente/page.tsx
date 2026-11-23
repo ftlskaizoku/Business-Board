@@ -62,9 +62,17 @@ export default async function VentePage() {
     </>
   );
 
-  const agenda = <RdvClient services={services || []} takenSlots={slots || []} currency={business.currency} />;
+  const agenda = (
+    <div className="lg:max-w-3xl">
+      <RdvClient services={services || []} takenSlots={slots || []} currency={business.currency} />
+    </div>
+  );
 
-  const historique = <SalesHistory sales={recentSales || []} currency={business.currency} />;
+  const historique = (
+    <div className="lg:max-w-3xl">
+      <SalesHistory sales={recentSales || []} currency={business.currency} />
+    </div>
+  );
 
   const tabs: VenteTab[] = [];
   if (showProducts) tabs.push({ id: "caisse", label: "Encaisser", panel: caisse });

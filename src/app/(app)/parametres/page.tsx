@@ -65,7 +65,7 @@ export default async function ParametresPage() {
   const displayName = profile?.full_name || profile?.email || "Votre compte";
 
   return (
-    <div>
+    <div className="lg:max-w-3xl">
       {/* Identity block */}
       <div className="flex items-center gap-4 mb-2 min-w-0">
         <span className="w-16 h-16 shrink-0 rounded-[22px] bg-ochre-soft text-ochre flex items-center justify-center font-display text-2xl font-semibold">

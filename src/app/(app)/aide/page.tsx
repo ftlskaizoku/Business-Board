@@ -44,7 +44,7 @@ export default async function AidePage() {
   ];
 
   return (
-    <div>
+    <div className="lg:max-w-3xl">
       <p className="text-xs uppercase tracking-widest text-muted mb-1">Aide</p>
       <h1 className="font-display text-[26px] leading-tight font-semibold mb-2">Comment utiliser Business Board</h1>
       <p className="text-sm text-muted mb-6">

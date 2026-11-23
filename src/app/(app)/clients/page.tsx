@@ -27,8 +27,9 @@ export default async function ClientsPage() {
         subtitle={`${clients.length} client${clients.length > 1 ? "s" : ""} enregistré${clients.length > 1 ? "s" : ""}`}
       />
 
+      <div className="lg:grid lg:grid-cols-12 lg:gap-x-8 lg:items-start">
       {clients.length > 0 && (
-        <Card className="!p-0 overflow-hidden mb-3">
+        <Card className="!p-0 overflow-hidden mb-3 lg:col-span-7 lg:col-start-1 lg:row-start-1">
           <div className="grid grid-cols-2 divide-x divide-line">
             <div className="p-3.5 min-w-0">
               <p className="text-[11px] text-muted">Total dépensé</p>
@@ -42,7 +43,7 @@ export default async function ClientsPage() {
         </Card>
       )}
 
-      <Card>
+      <Card className="lg:col-span-5 lg:col-start-8 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-8">
         <p className="font-display font-semibold mb-4">Nouveau client</p>
         <form action={addCustomer} className="space-y-4">
           <Field label="Nom">
@@ -57,8 +58,11 @@ export default async function ClientsPage() {
         </form>
       </Card>
 
-      <SectionHeader title="Liste" aside={clients.length || undefined} />
-      <ClientsList clients={clients} currency={business.currency} />
+      <div className="lg:col-span-7 lg:col-start-1 lg:row-start-2 min-w-0">
+        <SectionHeader title="Liste" aside={clients.length || undefined} />
+        <ClientsList clients={clients} currency={business.currency} />
+      </div>
+      </div>
     </div>
   );
 }

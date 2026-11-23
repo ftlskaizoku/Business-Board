@@ -22,7 +22,7 @@ export default function VenteTabs({ tabs }: { tabs: VenteTab[] }) {
       <div
         role="tablist"
         aria-label="Sections de la page"
-        className="relative flex p-1 rounded-2xl bg-line/60 mb-5"
+        className="relative flex p-1 rounded-2xl bg-line/60 mb-5 lg:max-w-md"
       >
         <span
           aria-hidden

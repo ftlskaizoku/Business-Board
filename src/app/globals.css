@@ -10,10 +10,13 @@
   --color-ochre-soft: #F2E2CB;
   --color-indigo: #3F4B8C;
   --color-indigo-soft: #E4E6F3;
-  --color-green: #3D8B5F;
-  --color-green-soft: #E4F3EA;
-  --color-red: #C24B4B;
-  --color-red-soft: #F8E6E6;
+  --color-green: #2F7D55;
+  --color-red: #B8403A;
+  /* Soft backgrounds are the semantic colour mixed into the theme's own card
+     colour, so green/red always sit naturally on every palette. */
+  --tint: 11%;
+  --color-green-soft: color-mix(in oklab, var(--color-green) var(--tint), var(--color-card));
+  --color-red-soft: color-mix(in oklab, var(--color-red) var(--tint), var(--color-card));
 }
 
 /* Theme palettes. Every screen is already built on these tokens, so
@@ -30,10 +33,8 @@
   --color-ochre-soft: #E4E6F3;
   --color-indigo: #C97A2B;
   --color-indigo-soft: #F2E2CB;
-  --color-green: #3D8B5F;
-  --color-green-soft: #E4F3EA;
-  --color-red: #C24B4B;
-  --color-red-soft: #F8E6E6;
+  --color-green: #25795C;
+  --color-red: #B93A56;
 }
 
 [data-theme="sombre"] {
@@ -46,10 +47,8 @@
   --color-ochre-soft: #3E2E1B;
   --color-indigo: #8891CC;
   --color-indigo-soft: #262A47;
-  --color-green: #6FC492;
-  --color-green-soft: #1E3A29;
-  --color-red: #E08080;
-  --color-red-soft: #402323;
+  --color-green: #8CC58B;
+  --color-red: #E9806B;
 }
 
 [data-theme="foret"] {
@@ -62,10 +61,8 @@
   --color-ochre-soft: #DCEEE1;
   --color-indigo: #B5652F;
   --color-indigo-soft: #F3E3D6;
-  --color-green: #3D8B5F;
-  --color-green-soft: #E4F3EA;
-  --color-red: #C24B4B;
-  --color-red-soft: #F8E6E6;
+  --color-green: #1F7F55;
+  --color-red: #B03F2B;
 }
 
 [data-theme="corail"] {
@@ -78,10 +75,8 @@
   --color-ochre-soft: #FBE1D8;
   --color-indigo: #3F4B8C;
   --color-indigo-soft: #E4E6F3;
-  --color-green: #3D8B5F;
-  --color-green-soft: #E4F3EA;
-  --color-red: #C24B4B;
-  --color-red-soft: #F8E6E6;
+  --color-green: #2F8050;
+  --color-red: #AE2B45;
 }
 
 [data-theme="nuit-indigo"] {
@@ -94,10 +89,8 @@
   --color-ochre-soft: #262B4E;
   --color-indigo: #E2A159;
   --color-indigo-soft: #3A2F1E;
-  --color-green: #6FC492;
-  --color-green-soft: #1E3A29;
-  --color-red: #E08080;
-  --color-red-soft: #402323;
+  --color-green: #5FCB9E;
+  --color-red: #F0768A;
 }
 
 [data-theme="ardoise"] {
@@ -110,10 +103,8 @@
   --color-ochre-soft: #E2E8F0;
   --color-indigo: #C97A2B;
   --color-indigo-soft: #F2E2CB;
-  --color-green: #3D8B5F;
-  --color-green-soft: #E4F3EA;
-  --color-red: #C24B4B;
-  --color-red-soft: #F8E6E6;
+  --color-green: #287A5C;
+  --color-red: #B93D45;
 }
 
 [data-theme="violet"] {
@@ -126,10 +117,8 @@
   --color-ochre-soft: #EDE3F9;
   --color-indigo: #C97A2B;
   --color-indigo-soft: #F2E2CB;
-  --color-green: #3D8B5F;
-  --color-green-soft: #E4F3EA;
-  --color-red: #C24B4B;
-  --color-red-soft: #F8E6E6;
+  --color-green: #27805F;
+  --color-red: #B93A5B;
 }
 
 @theme inline {
@@ -356,10 +345,8 @@ button:not(:disabled):active {
   --color-ochre-soft: #16294A;
   --color-indigo: #F2A65A;
   --color-indigo-soft: #3A2B17;
-  --color-green: #5FD0A0;
-  --color-green-soft: #143528;
-  --color-red: #FF7A7A;
-  --color-red-soft: #3D1C1F;
+  --color-green: #4FD1A0;
+  --color-red: #FF6B72;
   --color-on-accent: #07101F;
 }
 
@@ -373,10 +360,8 @@ button:not(:disabled):active {
   --color-ochre-soft: #1A3A29;
   --color-indigo: #E9A765;
   --color-indigo-soft: #3A2C1B;
-  --color-green: #6FD39B;
-  --color-green-soft: #1B3D2A;
-  --color-red: #E88383;
-  --color-red-soft: #3F2325;
+  --color-green: #7ADBA0;
+  --color-red: #F2887A;
   --color-on-accent: #07140D;
 }
 
@@ -390,10 +375,8 @@ button:not(:disabled):active {
   --color-ochre-soft: #2E2050;
   --color-indigo: #E8A65E;
   --color-indigo-soft: #3B2C1B;
-  --color-green: #6FC492;
-  --color-green-soft: #1E3A29;
-  --color-red: #E08080;
-  --color-red-soft: #402323;
+  --color-green: #6FD3AA;
+  --color-red: #F27A98;
   --color-on-accent: #120A22;
 }
 
@@ -407,10 +390,8 @@ button:not(:disabled):active {
   --color-ochre-soft: #10332F;
   --color-indigo: #F5A65B;
   --color-indigo-soft: #3A2B17;
-  --color-green: #6FC492;
-  --color-green-soft: #1E3A29;
-  --color-red: #E88383;
-  --color-red-soft: #402323;
+  --color-green: #7ED68F;
+  --color-red: #F26B6B;
   --color-on-accent: #061B18;
 }
 
@@ -424,10 +405,8 @@ button:not(:disabled):active {
   --color-ochre-soft: #4A2418;
   --color-indigo: #7FA0FF;
   --color-indigo-soft: #1F2A4D;
-  --color-green: #6FC492;
-  --color-green-soft: #1E3A29;
-  --color-red: #F08A8A;
-  --color-red-soft: #432526;
+  --color-green: #80D192;
+  --color-red: #F56A7E;
   --color-on-accent: #2A0F08;
 }
 
@@ -440,6 +419,7 @@ button:not(:disabled):active {
 [data-theme="carbone"],
 [data-theme="braise"] {
   color-scheme: dark;
+  --tint: 13%;
 }
 
 /* Horizontal scrollers without the visible bar. */
@@ -478,6 +458,52 @@ button:not(:disabled):active {
 @media (prefers-reduced-motion: reduce) {
   .sheet-up,
   .toast-in {
+    animation: none;
+  }
+}
+
+/* ───────────── Desktop / mobile ─────────────
+   Below 1024px the app is a phone-style column with a bottom tab bar.
+   From 1024px up it gets a left sidebar and wider, multi-column pages. */
+:root {
+  --bb-nav: calc(4rem + env(safe-area-inset-bottom));
+}
+@media (min-width: 1024px) {
+  :root {
+    --bb-nav: 0rem;
+  }
+  /* Bottom sheets turn into centred dialogs. */
+  .sheet-root {
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+  .sheet-panel {
+    border-radius: 1.5rem;
+    border: 1px solid var(--color-line);
+    max-width: 30rem;
+    animation: dialog-in 200ms ease-out both;
+  }
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (hover: hover) {
+  a[href],
+  button:not(:disabled),
+  summary {
+    cursor: pointer;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet-panel {
     animation: none;
   }
 }

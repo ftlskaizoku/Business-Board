@@ -112,22 +112,25 @@ export default function ExpensesBrowser({
     <div>
       <PageHeader eyebrow="Dépenses" title="Où part l'argent" subtitle={businessName} />
 
-      {/* New expense: one tap opens the form, so the list is never pushed down. */}
-      <div data-tour="depenses-form">
-        {formOpen ? (
+      <div className="lg:grid lg:grid-cols-12 lg:gap-x-8 lg:items-start">
+      <div className="flex flex-col lg:col-span-5 lg:order-2 lg:sticky lg:top-8">
+      {/* New expense: one tap opens the form on a phone; on desktop it is always there. */}
+      <div data-tour="depenses-form" className="lg:order-2 lg:mt-4">
+        <div className={formOpen ? "" : "hidden lg:block"}>
           <Card>
             <div className="flex items-center justify-between mb-4">
               <p className="font-display font-semibold">Nouvelle dépense</p>
-              <button onClick={() => setFormOpen(false)} aria-label="Fermer" className="h-8 w-8 -mr-1 flex items-center justify-center text-muted">
+              <button onClick={() => setFormOpen(false)} aria-label="Fermer" className="lg:hidden h-8 w-8 -mr-1 flex items-center justify-center text-muted">
                 <Icon name="close" size={18} />
               </button>
             </div>
             <ExpenseForm currency={currency} history={history} defaults={defaults} onSaved={() => setFormOpen(false)} />
           </Card>
-        ) : (
+        </div>
+        {!formOpen && (
           <button
             onClick={() => setFormOpen(true)}
-            className="w-full h-12 rounded-2xl bg-ochre font-medium text-[15px] flex items-center justify-center gap-2 shadow-[0_6px_16px_-8px_var(--color-ochre)]"
+            className="lg:hidden w-full h-12 rounded-2xl bg-ochre font-medium text-[15px] flex items-center justify-center gap-2 shadow-[0_6px_16px_-8px_var(--color-ochre)]"
           >
             <Icon name="plus" size={18} />
             Nouvelle dépense
@@ -136,7 +139,7 @@ export default function ExpensesBrowser({
       </div>
 
       {/* Summary + filter */}
-      <Card className="mt-4">
+      <Card className="mt-4 lg:mt-0 lg:order-1">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs text-muted">Total · {periodLabel.toLowerCase()}</p>
@@ -180,8 +183,10 @@ export default function ExpensesBrowser({
         )}
       </Card>
 
+      </div>
+
       {/* List */}
-      <div className="mt-6">
+      <div className="mt-6 lg:mt-0 lg:col-span-7 lg:order-1 min-w-0">
         {rows.length === 0 ? (
           <Card>
             <EmptyState
@@ -228,11 +233,12 @@ export default function ExpensesBrowser({
           </button>
         )}
       </div>
+      </div>
 
       {sheetOpen && (
-        <div className="fixed inset-0 z-30 flex flex-col justify-end" role="dialog" aria-modal="true" aria-label="Filtrer les dépenses">
+        <div className="sheet-root fixed inset-0 z-30 flex flex-col justify-end" role="dialog" aria-modal="true" aria-label="Filtrer les dépenses">
           <div className="absolute inset-0 bg-ink/40" onClick={() => setSheetOpen(false)} />
-          <div className="sheet-up relative bg-card rounded-t-3xl border-t border-line max-w-2xl w-full mx-auto max-h-[85vh] flex flex-col">
+          <div className="sheet-up sheet-panel relative bg-card rounded-t-3xl border-t border-line max-w-2xl w-full mx-auto max-h-[85vh] flex flex-col">
             <div className="pt-2.5 flex justify-center">
               <span className="w-10 h-1 rounded-full bg-line" />
             </div>

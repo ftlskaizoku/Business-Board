@@ -125,7 +125,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-[100dvh] flex flex-col max-w-md mx-auto w-full">
+    <div className="min-h-[100dvh] flex flex-col max-w-md md:max-w-xl lg:max-w-2xl mx-auto w-full">
       {/* Top: back + progress. Sticks to the top so you always know where you are. */}
       <header className="sticky top-0 z-10 bg-cream/90 backdrop-blur-md px-6 pt-5 pb-3">
         <div className="flex items-center gap-3">
@@ -170,7 +170,7 @@ export default function OnboardingPage() {
             <h1 className="font-display text-[26px] leading-tight font-semibold mb-1">Quel type de commerce ?</h1>
             <p className="text-muted text-sm mb-5">Cela détermine les outils que nous vous montrons.</p>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
               {NICHE_ORDER.map((key) => {
                 const n = NICHES[key];
                 const selected = niche === key;

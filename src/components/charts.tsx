@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { areaPath, smoothPath, type Pt } from "@/lib/chart-path";
 
 export interface TrendPoint {
@@ -10,8 +10,6 @@ export interface TrendPoint {
   b?: number; // optional second series (expenses)
 }
 
-const W = 320;
-const H = 150;
 const PAD_X = 6;
 const PAD_TOP = 10;
 const PAD_BOTTOM = 22;
@@ -37,7 +35,22 @@ export function TrendChart({
 }) {
   const gid = useId().replace(/:/g, "");
   const ref = useRef<SVGSVGElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState<number | null>(null);
+
+  // Draw at the card's real width (1 SVG unit = 1 CSS pixel), so text and
+  // strokes stay crisp on a wide desktop card instead of being scaled up.
+  const [W, setW] = useState(320);
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const measure = () => setW(Math.max(260, Math.round(el.getBoundingClientRect().width)));
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const H = W < 420 ? Math.round(W * 0.47) : Math.min(230, Math.round(W * 0.36));
 
   const max = Math.max(1, ...points.map((p) => Math.max(p.a, p.b ?? 0)));
   const innerW = W - PAD_X * 2;
@@ -66,7 +79,7 @@ export function TrendChart({
   const tipShift = tipLeftPct < 22 ? "0%" : tipLeftPct > 78 ? "-100%" : "-50%";
 
   return (
-    <div className="relative">
+    <div ref={wrapRef} className="relative">
       {act && (
         <div
           className="pointer-events-none absolute -top-1 z-10 rounded-xl bg-ink text-cream px-2.5 py-1.5 text-[11px] leading-snug shadow-lg whitespace-nowrap"
@@ -164,7 +177,7 @@ export function TrendChart({
               x={xAt(i)}
               y={H - 6}
               textAnchor={i === 0 ? "start" : i === points.length - 1 ? "end" : "middle"}
-              fontSize="9.5"
+              fontSize="11"
               fill="var(--color-muted)"
             >
               {p.label}

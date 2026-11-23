@@ -6,7 +6,7 @@ import { checkout } from "@/app/(app)/actions";
 import { primaryBtn } from "@/components/ui";
 import type { Product } from "@/lib/types";
 
-const NAV_OFFSET = "calc(4rem + env(safe-area-inset-bottom))";
+const NAV_OFFSET = "var(--bb-nav)";
 
 function Stepper({
   qty,
@@ -167,7 +167,7 @@ export default function VenteClient({
           {(categories.length > 1 && !category) && (
             <h2 className="text-xs font-medium uppercase tracking-wider text-muted mb-2 px-1">{g.category}</h2>
           )}
-          <div className="space-y-2">
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {g.items.map((p) => {
               const inCart = cart[p.id] || 0;
               const soldOut = trackStock && p.stock <= 0;
@@ -216,9 +216,9 @@ export default function VenteClient({
       ))}
 
       {filterOpen && (
-        <div className="fixed inset-0 z-30 flex flex-col justify-end" role="dialog" aria-modal="true" aria-label="Filtrer par catégorie">
+        <div className="sheet-root fixed inset-0 z-30 flex flex-col justify-end" role="dialog" aria-modal="true" aria-label="Filtrer par catégorie">
           <div className="absolute inset-0 bg-ink/40" onClick={() => setFilterOpen(false)} />
-          <div className="sheet-up relative bg-card rounded-t-3xl border-t border-line max-w-2xl w-full mx-auto max-h-[70vh] flex flex-col">
+          <div className="sheet-up sheet-panel relative bg-card rounded-t-3xl border-t border-line max-w-2xl w-full mx-auto max-h-[70vh] flex flex-col">
             <div className="pt-2.5 flex justify-center">
               <span className="w-10 h-1 rounded-full bg-line" />
             </div>
@@ -264,7 +264,7 @@ export default function VenteClient({
       {message && (
         <div
           role="status"
-          className="toast-in fixed left-1/2 z-30 bg-ink text-cream text-sm px-4 py-2.5 rounded-full shadow-lg whitespace-nowrap"
+          className="toast-in fixed left-1/2 lg:left-[calc(50%+8rem)] z-30 bg-ink text-cream text-sm px-4 py-2.5 rounded-full shadow-lg whitespace-nowrap"
           style={{ bottom: `calc(${NAV_OFFSET} + 0.75rem)` }}
         >
           ✓ {message}
@@ -272,7 +272,7 @@ export default function VenteClient({
       )}
 
       {itemCount > 0 && !drawerOpen && (
-        <div className="fixed inset-x-0 z-10 px-4 pointer-events-none" style={{ bottom: `calc(${NAV_OFFSET} + 0.625rem)` }}>
+        <div className="fixed inset-x-0 lg:left-64 z-10 px-4 pointer-events-none" style={{ bottom: `calc(${NAV_OFFSET} + 0.625rem)` }}>
           <div className="row-in pointer-events-auto max-w-2xl mx-auto bg-ochre rounded-2xl flex items-stretch overflow-hidden shadow-[0_12px_28px_-10px_var(--color-ochre)]">
             <button onClick={() => setDrawerOpen(true)} className="px-4 py-3 text-left border-r border-white/25 min-w-0">
               <span className="block text-[10px] uppercase tracking-widest opacity-80">Panier</span>
@@ -292,9 +292,9 @@ export default function VenteClient({
       )}
 
       {drawerOpen && (
-        <div className="fixed inset-0 z-30 flex flex-col justify-end" role="dialog" aria-modal="true" aria-label="Panier">
+        <div className="sheet-root fixed inset-0 z-30 flex flex-col justify-end" role="dialog" aria-modal="true" aria-label="Panier">
           <div className="absolute inset-0 bg-ink/40" onClick={() => setDrawerOpen(false)} />
-          <div className="sheet-up relative bg-card rounded-t-3xl border-t border-line max-h-[80vh] flex flex-col max-w-2xl w-full mx-auto">
+          <div className="sheet-up sheet-panel relative bg-card rounded-t-3xl border-t border-line max-h-[80vh] flex flex-col max-w-2xl w-full mx-auto">
             <div className="pt-2.5 flex justify-center">
               <span className="w-10 h-1 rounded-full bg-line" />
             </div>

@@ -38,7 +38,8 @@ export default async function CataloguePage() {
       <PageHeader eyebrow="Catalogue" title="Ce que vous vendez" subtitle={parts.join(" · ")} />
 
       {showProducts && (
-        <>
+        <div className="lg:grid lg:grid-cols-12 lg:gap-x-8 lg:items-start">
+          <div className="lg:col-span-5 lg:order-2 lg:sticky lg:top-8">
           <Card>
             <TrackStockToggle initial={business.track_stock} />
           </Card>
@@ -67,9 +68,11 @@ export default async function CataloguePage() {
               </button>
             </form>
           </Card>
+          </div>
 
+          <div className="lg:col-span-7 lg:order-1 min-w-0 lg:-mt-8">
           {(products?.length ?? 0) === 0 ? (
-            <Card className="mt-6">
+            <Card className="mt-6 lg:mt-8">
               <EmptyState
                 icon={<Icon name="box" size={20} />}
                 title="Votre catalogue est vide"
@@ -88,12 +91,14 @@ export default async function CataloguePage() {
               </section>
             ))
           )}
-        </>
+          </div>
+        </div>
       )}
 
       {showServices && (
-        <>
-          <Card className={showProducts ? "mt-10" : ""} data-tour="catalogue-form">
+        <div className={`lg:grid lg:grid-cols-12 lg:gap-x-8 lg:items-start ${showProducts ? "mt-10" : ""}`}>
+          <div className="lg:col-span-5 lg:order-2 lg:sticky lg:top-8">
+          <Card data-tour="catalogue-form">
             <p className="font-display font-semibold mb-4">Nouveau service</p>
             <form action={addService} className="space-y-4">
               <Field label="Nom">
@@ -115,7 +120,9 @@ export default async function CataloguePage() {
               </button>
             </form>
           </Card>
+          </div>
 
+          <div className="lg:col-span-7 lg:order-1 min-w-0 lg:-mt-8">
           {groupByCat(services || []).map((g) => (
             <section key={g.category}>
               <SectionHeader title={g.category} aside={g.items.length} />
@@ -143,7 +150,8 @@ export default async function CataloguePage() {
               </div>
             </section>
           ))}
-        </>
+          </div>
+        </div>
       )}
     </div>
   );
