@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { NICHES, NICHE_ORDER, hasProducts } from "@/lib/niches";
+import NicheIcon from "@/components/NicheIcon";
 import type { Niche, BizType } from "@/lib/types";
 
 type Step = "niche" | "type" | "stock" | "name";
@@ -183,8 +184,12 @@ export default function OnboardingPage() {
                       selected ? "border-ochre bg-ochre-soft" : "border-line bg-card"
                     }`}
                   >
-                    <span className="w-10 h-10 rounded-2xl bg-cream flex items-center justify-center text-xl mb-2.5">
-                      {n.icon}
+                    <span
+                      className={`w-11 h-11 rounded-2xl flex items-center justify-center mb-2.5 transition-colors ${
+                        selected ? "bg-ochre text-white" : "bg-ochre-soft text-ochre"
+                      }`}
+                    >
+                      <NicheIcon niche={key} size={22} />
                     </span>
                     <span className="block font-medium text-sm leading-snug">{n.label}</span>
                     <span className="block text-[11px] text-muted leading-snug mt-0.5">{n.blurb}</span>

@@ -1,14 +1,14 @@
 import { requireUserAndBusiness } from "@/lib/data";
-import { NICHES, nicheLabel, hasServices, hasProducts } from "@/lib/niches";
+import { nicheLabel, hasServices, hasProducts } from "@/lib/niches";
 import { ADMIN_EMAIL } from "@/lib/admin";
 import Link from "next/link";
 import BottomNav from "@/components/BottomNav";
+import NicheIcon from "@/components/NicheIcon";
 import TourProvider from "@/components/TourProvider";
 import { markTutorialSeen } from "./actions";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, business, profile } = await requireUserAndBusiness();
-  const n = NICHES[business.niche];
   const label = nicheLabel(business.niche, business.custom_niche);
   const isAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
@@ -24,8 +24,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <header className="sticky top-0 z-20 px-5 pt-5 pb-3.5 border-b border-line bg-card/85 backdrop-blur-md">
           <div className="flex items-center justify-between gap-3 max-w-2xl mx-auto w-full">
             <div className="flex items-center gap-3 min-w-0">
-              <span className="w-10 h-10 shrink-0 rounded-2xl bg-ochre-soft flex items-center justify-center text-lg">
-                {n.icon}
+              <span className="w-10 h-10 shrink-0 rounded-2xl bg-ochre-soft text-ochre flex items-center justify-center">
+                <NicheIcon niche={business.niche} size={21} />
               </span>
               <div className="min-w-0">
                 <p className="font-display font-semibold leading-tight truncate">{business.name}</p>

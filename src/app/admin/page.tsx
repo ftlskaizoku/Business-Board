@@ -7,6 +7,7 @@ import { TrendChart } from "@/components/charts";
 import Donut, { sliceColor } from "@/components/Donut";
 import AdminUsers from "@/components/AdminUsers";
 import AdminAutoRefresh from "@/components/AdminAutoRefresh";
+import NicheIcon from "@/components/NicheIcon";
 import type { Business, Profile } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -137,8 +138,8 @@ export default async function AdminPage() {
           <Card key={b.id} className="!p-3.5">
             <div className="flex items-center gap-3 min-w-0">
               <span className="w-6 shrink-0 text-center font-mono text-xs text-muted">{i + 1}</span>
-              <span className="w-10 h-10 shrink-0 rounded-full bg-ochre-soft flex items-center justify-center text-lg">
-                {b.icon}
+              <span className="w-10 h-10 shrink-0 rounded-xl bg-ochre-soft text-ochre flex items-center justify-center">
+                <NicheIcon niche={b.nicheKey} size={20} />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-sm truncate">{b.name}</p>

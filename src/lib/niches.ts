@@ -3,7 +3,6 @@ import type { Niche, BizType } from "./types";
 export interface NicheConfig {
   key: Niche;
   label: string;
-  icon: string;
   blurb: string;
   defaultType: BizType;
   allowedTypes: BizType[];
@@ -13,7 +12,6 @@ export const NICHES: Record<Niche, NicheConfig> = {
   restaurant: {
     key: "restaurant",
     label: "Restaurant",
-    icon: "🍽",
     blurb: "Plats, boissons, service en salle",
     defaultType: "products",
     allowedTypes: ["products"],
@@ -21,7 +19,6 @@ export const NICHES: Record<Niche, NicheConfig> = {
   boutique: {
     key: "boutique",
     label: "Boutique",
-    icon: "🛍",
     blurb: "Vente de produits, stock",
     defaultType: "products",
     allowedTypes: ["products"],
@@ -29,7 +26,6 @@ export const NICHES: Record<Niche, NicheConfig> = {
   salon: {
     key: "salon",
     label: "Salon",
-    icon: "💇",
     blurb: "Coiffure, beauté, rendez-vous",
     defaultType: "services",
     allowedTypes: ["services", "both"],
@@ -37,7 +33,6 @@ export const NICHES: Record<Niche, NicheConfig> = {
   prestataire: {
     key: "prestataire",
     label: "Prestataire",
-    icon: "🧰",
     blurb: "Services à la demande ou sur rendez-vous",
     defaultType: "services",
     allowedTypes: ["services"],
@@ -45,7 +40,6 @@ export const NICHES: Record<Niche, NicheConfig> = {
   ecommerce: {
     key: "ecommerce",
     label: "E-commerce",
-    icon: "📦",
     blurb: "Vente en ligne, commandes",
     defaultType: "products",
     allowedTypes: ["products"],
@@ -53,7 +47,6 @@ export const NICHES: Record<Niche, NicheConfig> = {
   autre: {
     key: "autre",
     label: "Autre",
-    icon: "✨",
     blurb: "Vous ne vous reconnaissez pas dans la liste ?",
     defaultType: "both",
     allowedTypes: ["products", "services", "both"],

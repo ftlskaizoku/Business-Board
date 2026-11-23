@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { requireUserAndBusiness } from "@/lib/data";
 import { ADMIN_EMAIL } from "@/lib/admin";
-import { nicheLabel, hasProducts, NICHES } from "@/lib/niches";
+import { nicheLabel, hasProducts } from "@/lib/niches";
+import NicheIcon from "@/components/NicheIcon";
 import { SectionHeader } from "@/components/ui";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
 import RestartTourButton from "@/components/RestartTourButton";
@@ -73,8 +74,9 @@ export default async function ParametresPage() {
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-widest text-muted font-medium">Paramètres</p>
           <h1 className="font-display text-[24px] leading-tight font-semibold truncate">{displayName}</h1>
-          <p className="text-xs text-muted truncate mt-0.5">
-            {NICHES[business.niche].icon} {business.name} · depuis <span className="capitalize">{memberSince}</span>
+          <p className="text-xs text-muted truncate mt-0.5 flex items-center gap-1.5">
+            <NicheIcon niche={business.niche} size={14} className="shrink-0 text-ochre" />
+            <span className="truncate">{business.name} · depuis <span className="capitalize">{memberSince}</span></span>
           </p>
         </div>
       </div>

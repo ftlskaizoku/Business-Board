@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { THEMES } from "@/lib/themes";
+import { NICHES, NICHE_ORDER } from "@/lib/niches";
+import NicheIcon from "@/components/NicheIcon";
 import { Sparkline } from "@/components/charts";
 import Donut, { sliceColor } from "@/components/Donut";
 
@@ -9,7 +10,7 @@ const FEATURES = [
   {
     title: "Ventes en un tap",
     text: "Choisissez un produit ou un service, la quantité, et c'est enregistré. Vous pouvez aussi saisir une vente d'un jour passé.",
-    path: "M12 5v14M5 12h14",
+    path: "M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6",
   },
   {
     title: "Catalogue & stock",
@@ -19,7 +20,7 @@ const FEATURES = [
   {
     title: "Dépenses",
     text: "Notez vos dépenses au jour le jour, avec vos propres noms que l'application retient pour la prochaine fois.",
-    path: "M3 8l9 5 9-5M5 8v9a2 2 0 002 2h10a2 2 0 002-2V8M9 4h6",
+    path: "M4 7.5A2.5 2.5 0 016.5 5H18v3M4 7.5V17a2 2 0 002 2h13a1 1 0 001-1V9a1 1 0 00-1-1H6.5A2.5 2.5 0 014 7.5zM16 13.5h.01",
   },
   {
     title: "Statistiques claires",
@@ -81,7 +82,7 @@ export default async function RootPage() {
           <nav className="hidden md:flex items-center gap-7 text-sm text-muted">
             <a href="#fonctionnalites" className="hover:text-ink transition-colors">Fonctionnalités</a>
             <a href="#comment" className="hover:text-ink transition-colors">Comment ça marche</a>
-            <a href="#themes" className="hover:text-ink transition-colors">Thèmes</a>
+            <a href="#commerces" className="hover:text-ink transition-colors">Pour qui</a>
           </nav>
           <div className="flex items-center gap-2">
             <Link href="/auth?mode=signin" className="text-sm font-medium px-3 py-2">
@@ -215,28 +216,24 @@ export default async function RootPage() {
           </div>
         </section>
 
-        {/* Themes */}
-        <section id="themes" className="px-5 pb-14 max-w-5xl mx-auto w-full scroll-mt-20">
-          <div className="bg-card border border-line rounded-[28px] card-surface p-6 sm:p-8 text-center">
-            <p className="text-xs uppercase tracking-widest text-muted font-medium mb-2">Personnalisation</p>
-            <h2 className="font-display text-2xl sm:text-3xl font-semibold mb-2">
-              {THEMES.length} thèmes, clairs et sombres
-            </h2>
-            <p className="text-sm text-muted mb-6 max-w-md mx-auto">
-              Choisissez les couleurs qui vous plaisent. Votre choix est retenu à chaque ouverture de l&apos;application.
-            </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              {THEMES.map((t) => (
-                <span
-                  key={t.id}
-                  title={t.label}
-                  className="w-12 h-12 rounded-2xl border border-line flex items-center justify-center"
-                  style={{ background: t.bg }}
-                >
-                  <span className="w-5 h-5 rounded-full" style={{ background: t.swatch }} />
+        {/* Business types */}
+        <section id="commerces" className="px-5 pb-14 max-w-5xl mx-auto w-full scroll-mt-20">
+          <div className="text-center mb-8">
+            <p className="text-xs uppercase tracking-widest text-muted font-medium mb-2">Pour qui</p>
+            <h2 className="font-display text-2xl sm:text-3xl font-semibold">Adapté à votre activité</h2>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {NICHE_ORDER.map((key) => (
+              <div key={key} className="bg-card border border-line rounded-[20px] card-surface p-4 flex items-start gap-3.5">
+                <span className="w-11 h-11 shrink-0 rounded-2xl bg-ochre-soft text-ochre flex items-center justify-center">
+                  <NicheIcon niche={key} size={22} />
                 </span>
-              ))}
-            </div>
+                <div className="min-w-0">
+                  <p className="font-medium text-sm">{NICHES[key].label}</p>
+                  <p className="text-xs text-muted leading-snug mt-0.5">{NICHES[key].blurb}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 

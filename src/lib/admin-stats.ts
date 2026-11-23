@@ -1,6 +1,6 @@
-import { NICHES, nicheLabel } from "@/lib/niches";
+import { nicheLabel } from "@/lib/niches";
 import { dateFr, timeAgoFr } from "@/lib/format";
-import type { Business, Profile } from "@/lib/types";
+import type { Business, Niche, Profile } from "@/lib/types";
 
 export interface SaleRow {
   business_id: string;
@@ -24,7 +24,7 @@ export interface AdminUser {
 export interface TopBusiness {
   id: string;
   name: string;
-  icon: string;
+  nicheKey: Niche;
   niche: string;
   owner: string;
   sales7: number;
@@ -135,7 +135,7 @@ export function buildAdminOverview(opts: {
     .map((b) => ({
       id: b.id,
       name: b.name,
-      icon: NICHES[b.niche].icon,
+      nicheKey: b.niche,
       niche: nicheLabel(b.niche, b.custom_niche),
       owner: ownerName[b.owner_id] || "—",
       sales7: byBusiness7[b.id] || 0,
