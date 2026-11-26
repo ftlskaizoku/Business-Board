@@ -18,23 +18,47 @@ function cleanExpenseName(raw: string) {
   return raw.replace(/\s+/g, " ").trim().slice(0, 60) || "Autre";
 }
 
+// ── Input hygiene ────────────────────────────────────────────────────────
+// Server actions are public HTTP endpoints: anyone signed in can call them
+// with any payload, whatever the form allows. Every number and string is
+// re-checked here before it reaches the database.
+const MAX_MONEY = 1_000_000_000_000; // 1e12
+const MAX_QTY = 100_000;
+
+/** A finite positive amount within sane bounds, or null. */
+function cleanAmount(raw: unknown): number | null {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0 || n > MAX_MONEY) return null;
+  return Math.round(n * 100) / 100;
+}
+function cleanQty(raw: unknown): number | null {
+  const n = Math.round(Number(raw));
+  if (!Number.isFinite(n) || n < 1 || n > MAX_QTY) return null;
+  return n;
+}
+function cleanText(raw: unknown, max: number) {
+  return String(raw ?? "").replace(/\s+/g, " ").trim().slice(0, max);
+}
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isId = (v: unknown): v is string => typeof v === "string" && UUID_RE.test(v);
+
 export async function markTutorialSeen() {
   const { supabase, user } = await requireAllowedUser();
-  await supabase.from("profiles").upsert({ id: user.id, tutorial_seen: true }, { onConflict: "id" });
+  await supabase.from("profiles").update({ tutorial_seen: true }).eq("id", user.id);
   revalidatePath("/", "layout");
 }
 
 export async function updateFullName(formData: FormData) {
   const { supabase, user } = await requireAllowedUser();
-  const fullName = String(formData.get("full_name") || "").trim();
+  const fullName = cleanText(formData.get("full_name"), 80);
   if (!fullName) return;
-  await supabase.from("profiles").upsert({ id: user.id, full_name: fullName }, { onConflict: "id" });
+  await supabase.from("profiles").update({ full_name: fullName }).eq("id", user.id);
   revalidatePath("/parametres");
 }
 
 export async function updateBusinessName(formData: FormData) {
   const { supabase, business } = await requireUserAndBusiness();
-  const name = String(formData.get("name") || "").trim();
+  const name = cleanText(formData.get("name"), 80);
   if (!name) return;
   await supabase.from("businesses").update({ name }).eq("id", business.id);
   revalidatePath("/parametres");
@@ -44,10 +68,10 @@ export async function updateBusinessName(formData: FormData) {
 export async function addExpense(formData: FormData) {
   const { supabase, business } = await requireUserAndBusiness();
   const category = cleanExpenseName(String(formData.get("category") || ""));
-  const amount = Number(formData.get("amount") || 0);
-  const note = String(formData.get("note") || "");
+  const amount = cleanAmount(formData.get("amount"));
+  const note = cleanText(formData.get("note"), 300);
   const expenseDate = clampToPastOrToday(String(formData.get("date") || ""));
-  if (!amount) return;
+  if (amount === null) return;
 
   await supabase.from("expenses").insert({
     business_id: business.id,
@@ -69,15 +93,16 @@ export async function updateExpense(input: {
   note: string;
 }) {
   const { supabase, business } = await requireUserAndBusiness();
-  if (!input.expenseId || !input.amount) return;
+  const amount = cleanAmount(input.amount);
+  if (!isId(input.expenseId) || amount === null) return;
 
   await supabase
     .from("expenses")
     .update({
       expense_date: clampToPastOrToday(input.date),
       category: cleanExpenseName(input.category || ""),
-      amount: input.amount,
-      note: input.note,
+      amount,
+      note: cleanText(input.note, 300),
     })
     .eq("id", input.expenseId)
     .eq("business_id", business.id);
@@ -88,6 +113,7 @@ export async function updateExpense(input: {
 
 export async function deleteExpense(expenseId: string) {
   const { supabase, business } = await requireUserAndBusiness();
+  if (!isId(expenseId)) return;
   await supabase.from("expenses").delete().eq("id", expenseId).eq("business_id", business.id);
   revalidatePath("/depenses");
   revalidatePath("/dashboard");
@@ -96,14 +122,15 @@ export async function deleteExpense(expenseId: string) {
 
 export async function addProduct(formData: FormData) {
   const { supabase, business } = await requireUserAndBusiness();
-  const name = String(formData.get("name") || "").trim();
-  const category = String(formData.get("category") || "Autre").trim() || "Autre";
-  const price = Number(formData.get("price") || 0);
+  const name = cleanText(formData.get("name"), 120);
+  const category = cleanText(formData.get("category"), 60) || "Autre";
+  const price = cleanAmount(formData.get("price"));
   // Stock only matters for businesses that track it (e.g. boutiques,
   // e-commerce). A restaurant's dish isn't backed by a countable stock, so
   // it's simply ignored (stored as 0) when tracking is off.
-  const stock = business.track_stock ? Number(formData.get("stock") || 0) : 0;
-  if (!name || !price) return;
+  const stockRaw = Math.round(Number(formData.get("stock") || 0));
+  const stock = business.track_stock && Number.isFinite(stockRaw) ? Math.min(MAX_QTY, Math.max(0, stockRaw)) : 0;
+  if (!name || price === null) return;
 
   await supabase.from("products").insert({ business_id: business.id, name, category, price, stock });
   revalidatePath("/catalogue");
@@ -124,7 +151,7 @@ export async function setTrackStock(trackStock: boolean) {
 export async function restockProduct(productId: string, quantity: number) {
   const { supabase, business } = await requireUserAndBusiness();
   const add = Math.round(quantity);
-  if (!productId || !Number.isFinite(add) || add <= 0 || add > 1_000_000) return;
+  if (!isId(productId) || !Number.isFinite(add) || add <= 0 || add > 1_000_000) return;
 
   const { data: product } = await supabase
     .from("products")
@@ -146,6 +173,7 @@ export async function restockProduct(productId: string, quantity: number) {
 
 export async function deleteProduct(productId: string) {
   const { supabase, business } = await requireUserAndBusiness();
+  if (!isId(productId)) return;
   await supabase.from("products").delete().eq("id", productId).eq("business_id", business.id);
   revalidatePath("/catalogue");
   revalidatePath("/vente");
@@ -153,11 +181,11 @@ export async function deleteProduct(productId: string) {
 
 export async function addService(formData: FormData) {
   const { supabase, business } = await requireUserAndBusiness();
-  const name = String(formData.get("name") || "").trim();
-  const category = String(formData.get("category") || "Autre").trim() || "Autre";
-  const duration = String(formData.get("duration") || "").trim() || "—";
-  const price = Number(formData.get("price") || 0);
-  if (!name || !price) return;
+  const name = cleanText(formData.get("name"), 120);
+  const category = cleanText(formData.get("category"), 60) || "Autre";
+  const duration = cleanText(formData.get("duration"), 30) || "—";
+  const price = cleanAmount(formData.get("price"));
+  if (!name || price === null) return;
 
   await supabase.from("services").insert({ business_id: business.id, name, category, duration, price });
   revalidatePath("/catalogue");
@@ -166,6 +194,7 @@ export async function addService(formData: FormData) {
 
 export async function deleteService(serviceId: string) {
   const { supabase, business } = await requireUserAndBusiness();
+  if (!isId(serviceId)) return;
   await supabase.from("services").delete().eq("id", serviceId).eq("business_id", business.id);
   revalidatePath("/catalogue");
   revalidatePath("/vente");
@@ -173,25 +202,34 @@ export async function deleteService(serviceId: string) {
 
 export async function checkout(cart: { productId: string; qty: number }[]) {
   const { supabase, business } = await requireUserAndBusiness();
-  if (!cart.length) return;
+  if (!Array.isArray(cart) || cart.length === 0 || cart.length > 200) return;
 
+  // Never trust the browser's cart: keep only well-formed lines, merge
+  // duplicates, and force a whole quantity between 1 and MAX_QTY (a negative
+  // quantity would otherwise create a negative sale and add stock).
+  const wanted = new Map<string, number>();
+  for (const c of cart) {
+    const qty = cleanQty(c?.qty);
+    if (!isId(c?.productId) || qty === null) return;
+    wanted.set(c.productId, Math.min(MAX_QTY, (wanted.get(c.productId) ?? 0) + qty));
+  }
+
+  // Prices come from the database, never from the client.
   const { data: products } = await supabase
     .from("products")
     .select("id, name, price, stock")
     .eq("business_id", business.id)
-    .in(
-      "id",
-      cart.map((c) => c.productId)
-    );
+    .in("id", [...wanted.keys()]);
   if (!products) return;
 
-  const lines = cart
-    .map((c) => {
-      const p = products.find((x) => x.id === c.productId);
+  const lines = [...wanted.entries()]
+    .map(([productId, qty]) => {
+      const p = products.find((x) => x.id === productId);
       if (!p) return null;
-      return { productId: p.id, name: p.name, price: p.price, qty: c.qty, newStock: Math.max(0, p.stock - c.qty) };
+      return { productId: p.id, name: p.name, price: p.price, qty, newStock: Math.max(0, p.stock - qty) };
     })
     .filter((l): l is NonNullable<typeof l> => !!l);
+  if (lines.length === 0) return;
 
   const total = lines.reduce((s, l) => s + l.price * l.qty, 0);
 
@@ -210,7 +248,9 @@ export async function checkout(cart: { productId: string; qty: number }[]) {
   // e.g. a restaurant's dishes aren't backed by a countable stock.
   if (business.track_stock) {
     await Promise.all(
-      lines.map((l) => supabase.from("products").update({ stock: l.newStock }).eq("id", l.productId))
+      lines.map((l) =>
+        supabase.from("products").update({ stock: l.newStock }).eq("id", l.productId).eq("business_id", business.id)
+      )
     );
   }
 
@@ -225,10 +265,10 @@ export async function checkout(cart: { productId: string; qty: number }[]) {
 // a lump total against a chosen date.
 export async function addManualSale(formData: FormData) {
   const { supabase, business } = await requireUserAndBusiness();
-  const amount = Number(formData.get("amount") || 0);
-  const note = String(formData.get("note") || "").trim();
+  const amount = cleanAmount(formData.get("amount"));
+  const note = cleanText(formData.get("note"), 120);
   const saleDate = clampToPastOrToday(String(formData.get("date") || ""));
-  if (!amount) return;
+  if (amount === null) return;
 
   const { data: sale } = await supabase
     .from("sales")
@@ -263,14 +303,12 @@ export async function updateSale(input: {
   items: { name: string; qty: number; price: number }[];
 }) {
   const { supabase, business } = await requireUserAndBusiness();
-  const items = input.items
-    .map((it) => ({
-      name: it.name.trim() || "Article",
-      qty: Math.max(1, Math.round(it.qty) || 1),
-      price: Math.max(0, it.price) || 0,
-    }))
-    .filter((it) => it.name);
-  if (!input.saleId || items.length === 0) return;
+  if (!isId(input.saleId) || !Array.isArray(input.items) || input.items.length === 0 || input.items.length > 100) return;
+  const items = input.items.map((it) => ({
+    name: cleanText(it?.name, 120) || "Article",
+    qty: cleanQty(it?.qty) ?? 1,
+    price: Number.isFinite(Number(it?.price)) ? Math.min(MAX_MONEY, Math.max(0, Number(it.price))) : 0,
+  }));
 
   const { data: sale } = await supabase
     .from("sales")
@@ -283,9 +321,14 @@ export async function updateSale(input: {
   const saleDate = clampToPastOrToday(input.date);
   const total = items.reduce((s, it) => s + it.qty * it.price, 0);
 
-  await supabase.from("sales").update({ sale_date: saleDate, total }).eq("id", sale.id);
-  await supabase.from("sale_items").delete().eq("sale_id", sale.id);
-  await supabase.from("sale_items").insert(items.map((it) => ({ sale_id: sale.id, ...it })));
+  // Insert the new lines first and delete the old ones only once that worked,
+  // so a failed write can never leave a sale with no items.
+  const { data: oldItems } = await supabase.from("sale_items").select("id").eq("sale_id", sale.id);
+  const { error: insertError } = await supabase.from("sale_items").insert(items.map((it) => ({ sale_id: sale.id, ...it })));
+  if (insertError) return;
+  const oldIds = (oldItems ?? []).map((o) => o.id);
+  if (oldIds.length) await supabase.from("sale_items").delete().in("id", oldIds);
+  await supabase.from("sales").update({ sale_date: saleDate, total }).eq("id", sale.id).eq("business_id", business.id);
 
   revalidatePath("/vente");
   revalidatePath("/dashboard");
@@ -294,6 +337,7 @@ export async function updateSale(input: {
 
 export async function deleteSale(saleId: string) {
   const { supabase, business } = await requireUserAndBusiness();
+  if (!isId(saleId)) return;
   await supabase.from("sales").delete().eq("id", saleId).eq("business_id", business.id);
   revalidatePath("/vente");
   revalidatePath("/dashboard");
@@ -304,11 +348,11 @@ export async function bookSlot(formData: FormData) {
   const { supabase, business } = await requireUserAndBusiness();
   const slotTime = String(formData.get("slotTime") || "");
   const serviceId = String(formData.get("serviceId") || "");
-  const clientName = String(formData.get("clientName") || "Nouveau client");
-  if (!slotTime) return;
+  const clientName = cleanText(formData.get("clientName"), 80) || "Nouveau client";
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(slotTime)) return;
 
-  const { data: service } = serviceId
-    ? await supabase.from("services").select("name, price").eq("id", serviceId).single()
+  const { data: service } = isId(serviceId)
+    ? await supabase.from("services").select("name, price").eq("id", serviceId).eq("business_id", business.id).single()
     : { data: null };
 
   await supabase.from("appointment_slots").insert({
@@ -340,8 +384,8 @@ export async function bookSlot(formData: FormData) {
 
 export async function addCustomer(formData: FormData) {
   const { supabase, business } = await requireUserAndBusiness();
-  const name = String(formData.get("name") || "").trim();
-  const phone = String(formData.get("phone") || "").trim();
+  const name = cleanText(formData.get("name"), 80);
+  const phone = cleanText(formData.get("phone"), 30);
   if (!name) return;
   await supabase.from("customers").insert({ business_id: business.id, name, phone: phone || null });
   revalidatePath("/clients");
