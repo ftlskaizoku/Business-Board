@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Space_Grotesk, IBM_Plex_Mono } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import InstallPrompt from "@/components/InstallPrompt";
 import OfflineBanner from "@/components/OfflineBanner";
 import { cookies } from "next/headers";
@@ -7,8 +7,8 @@ import { cleanTheme, THEME_COOKIE, THEME_IDS } from "@/lib/themes";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"], display: "swap" });
-const spaceGrotesk = Space_Grotesk({ variable: "--font-space-grotesk", subsets: ["latin"], weight: ["500", "600", "700"], display: "swap" });
-const plexMono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"], weight: ["400", "500"], display: "swap" });
+// Variable font: no explicit weights (multi-weight queries break Turbopack builds).
+const spaceGrotesk = Space_Grotesk({ variable: "--font-space-grotesk", subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
   title: "Business Board",
@@ -46,7 +46,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       lang="fr"
       data-theme={theme}
       suppressHydrationWarning
-      className={`${inter.variable} ${spaceGrotesk.variable} ${plexMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${spaceGrotesk.variable} h-full antialiased`}
     >
       <head>
         {/* Safety net for people who saved a theme before the cookie existed:
