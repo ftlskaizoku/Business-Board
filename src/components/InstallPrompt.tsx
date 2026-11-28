@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 // The install banner is offered ONE time per device. It is remembered as soon
 // as it appears (localStorage + a long-lived cookie), so refreshing, logging
@@ -42,6 +43,10 @@ export default function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showIosHelp, setShowIosHelp] = useState(false);
   const [visible, setVisible] = useState(false);
+  const pathname = usePathname();
+  // The banner belongs to the page where it popped up: moving to another page
+  // (or waiting a few seconds) closes it for good — it is already marked seen.
+  const [shownOn, setShownOn] = useState<string | null>(null);
 
   useEffect(() => {
     // register the service worker (required by Chrome for installability)
@@ -55,6 +60,8 @@ export default function InstallPrompt() {
       const t = window.setTimeout(() => {
         setShowIosHelp(true);
         setVisible(true);
+        setShownOn(window.location.pathname);
+        window.setTimeout(() => setVisible(false), 15000);
         rememberOffered();
       }, 0);
       return () => window.clearTimeout(t);
@@ -64,6 +71,8 @@ export default function InstallPrompt() {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setVisible(true);
+        setShownOn(window.location.pathname);
+        window.setTimeout(() => setVisible(false), 15000);
       rememberOffered();
     }
     window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
@@ -81,13 +90,14 @@ export default function InstallPrompt() {
     await deferredPrompt.userChoice;
     setDeferredPrompt(null);
     setVisible(false);
+    rememberOffered();
   }
 
-  if (!visible) return null;
+  if (!visible || shownOn !== pathname) return null;
 
   return (
     <div className="fixed bottom-16 left-0 right-0 lg:bottom-4 lg:left-64 z-30 px-4 pb-3">
-      <div className="max-w-2xl mx-auto bg-ink text-white rounded-xl p-3.5 flex items-start gap-3 shadow-lg">
+      <div className="max-w-2xl mx-auto bg-card text-ink border border-line rounded-xl p-3.5 flex items-start gap-3 shadow-lg">
         <span className="text-xl leading-none mt-0.5">📲</span>
         <div className="flex-1 min-w-0">
           {showIosHelp ? (
@@ -103,11 +113,11 @@ export default function InstallPrompt() {
           )}
           <div className="flex gap-3 mt-2">
             {!showIosHelp && (
-              <button onClick={handleInstall} className="text-xs font-medium text-ochre-soft underline underline-offset-2">
+              <button onClick={handleInstall} className="text-xs font-semibold text-ochre underline underline-offset-2">
                 Installer
               </button>
             )}
-            <button onClick={dismiss} className="text-xs text-white/60">
+            <button onClick={dismiss} className="text-xs text-muted">
               {showIosHelp ? "Compris" : "Plus tard"}
             </button>
           </div>
