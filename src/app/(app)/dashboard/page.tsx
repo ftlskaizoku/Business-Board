@@ -8,8 +8,17 @@ import { TrendChart, type TrendPoint } from "@/components/charts";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const { supabase, business } = await requireUserAndBusiness();
+  const { supabase, business, profile, user } = await requireUserAndBusiness();
   const today = todayKey();
+  // "Bonjour, Aboubakrine": first word of the saved name, else the part of the e-mail before "@".
+  const rawName = (profile?.full_name || "").trim() || (user.email || "").split("@")[0];
+  const firstName = rawName.split(/\s+/)[0];
+  const dateLabel = new Date(today + "T00:00:00Z").toLocaleDateString("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  });
   const showStock = hasProducts(business.type) && business.track_stock;
 
   const [{ data: todaySales }, { data: todayExpenses }, { data: last7 }, { data: last7Expenses }, { data: prev7 }, { data: stockRows }, { data: recentSales }] =
@@ -80,7 +89,7 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <PageHeading eyebrow="Aujourd'hui" title="Bonjour" />
+      <PageHeading eyebrow={dateLabel} title={firstName ? `Bonjour, ${firstName}` : "Bonjour"} />
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4" data-tour="dashboard-metrics">
         <Card className={`col-span-2 lg:col-span-1 ${profit >= 0 ? "bg-green-soft border-green/30!" : "bg-red-soft border-red/30!"}`}>

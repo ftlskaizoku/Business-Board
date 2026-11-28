@@ -2,8 +2,25 @@
 
 import { useEffect, useState } from "react";
 
-const DISMISS_KEY = "bb-install-dismissed-at";
-const DISMISS_DAYS = 14;
+// The install banner is offered ONE time per device. It is remembered as soon
+// as it appears (localStorage + a long-lived cookie), so refreshing, logging
+// out and back in, or ignoring it never brings it back. Installing later is
+// still possible from Paramètres.
+const SEEN_KEY = "bb-install-offered";
+
+function alreadyOffered() {
+  try {
+    if (window.localStorage.getItem(SEEN_KEY)) return true;
+  } catch {}
+  return document.cookie.split("; ").some((c) => c.startsWith(SEEN_KEY + "="));
+}
+
+function rememberOffered() {
+  try {
+    window.localStorage.setItem(SEEN_KEY, "1");
+  } catch {}
+  document.cookie = `${SEEN_KEY}=1; max-age=${60 * 60 * 24 * 365 * 2}; path=/; samesite=lax`;
+}
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -21,16 +38,6 @@ function isIos() {
   return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 }
 
-function recentlyDismissed() {
-  if (typeof window === "undefined") return false;
-  const raw = window.localStorage.getItem(DISMISS_KEY);
-  if (!raw) return false;
-  const dismissedAt = Number(raw);
-  if (Number.isNaN(dismissedAt)) return false;
-  const days = (Date.now() - dismissedAt) / (1000 * 60 * 60 * 24);
-  return days < DISMISS_DAYS;
-}
-
 export default function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showIosHelp, setShowIosHelp] = useState(false);
@@ -42,18 +49,22 @@ export default function InstallPrompt() {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
 
-    if (isStandalone() || recentlyDismissed()) return;
+    if (isStandalone() || alreadyOffered()) return;
 
     if (isIos()) {
-      setShowIosHelp(true);
-      setVisible(true);
-      return;
+      const t = window.setTimeout(() => {
+        setShowIosHelp(true);
+        setVisible(true);
+        rememberOffered();
+      }, 0);
+      return () => window.clearTimeout(t);
     }
 
     function onBeforeInstallPrompt(e: Event) {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setVisible(true);
+      rememberOffered();
     }
     window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
     return () => window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
@@ -61,7 +72,7 @@ export default function InstallPrompt() {
 
   function dismiss() {
     setVisible(false);
-    window.localStorage.setItem(DISMISS_KEY, String(Date.now()));
+    rememberOffered();
   }
 
   async function handleInstall() {

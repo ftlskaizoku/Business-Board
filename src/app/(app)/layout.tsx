@@ -15,6 +15,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <TourProvider
+      userId={user.id}
       autoStart={!profile?.tutorial_seen}
       businessName={business.name}
       showsServices={hasServices(business.type)}

@@ -56,7 +56,8 @@ export default function VenteTabs({ tabs }: { tabs: VenteTab[] }) {
           id={`vente-panel-${t.id}`}
           aria-labelledby={`vente-tab-${t.id}`}
           hidden={t.id !== active}
-          className={t.id === active ? "row-in" : undefined}
+          // opacity-only: a transform animation here would trap the fixed cart bar and sheets
+          className={t.id === active ? "page-enter" : undefined}
         >
           {t.panel}
         </div>

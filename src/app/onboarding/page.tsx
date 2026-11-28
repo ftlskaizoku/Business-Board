@@ -106,9 +106,9 @@ export default function OnboardingPage() {
     }
     const { error } = await supabase.from("businesses").insert({
       owner_id: user.id,
-      name: name.trim().slice(0, 80),
+      name: name.trim(),
       niche,
-      custom_niche: niche === "autre" ? customNiche.trim().slice(0, 60) : null,
+      custom_niche: niche === "autre" ? customNiche.trim() : null,
       type,
       currency: "FCFA",
       track_stock: needsStockStep ? trackStock : true,

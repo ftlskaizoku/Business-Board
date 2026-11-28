@@ -21,6 +21,7 @@ export function useTour() {
 
 export default function TourProvider({
   children,
+  userId,
   autoStart,
   businessName,
   showsServices,
@@ -28,6 +29,7 @@ export default function TourProvider({
   onFinish,
 }: {
   children: React.ReactNode;
+  userId: string;
   autoStart: boolean;
   businessName: string;
   showsServices: boolean;
@@ -46,13 +48,29 @@ export default function TourProvider({
   const router = useRouter();
   const pathname = usePathname();
 
+  // The first-visit tour is shown ONCE. It is marked as seen the moment it
+  // opens (not when it is finished), both on the account and on this device,
+  // so a refresh, a new login or closing the tab mid-way never brings it back.
+  // "Revoir la visite guidée" in Paramètres still works through startTour.
   useEffect(() => {
-    if (autoStart && !hasAutoStarted.current) {
-      hasAutoStarted.current = true;
-      setStepIndex(0);
-      setActive(true);
+    if (!autoStart || hasAutoStarted.current) return;
+    hasAutoStarted.current = true;
+    const key = `bb-tour-seen-${userId}`;
+    let seenHere = false;
+    try {
+      seenHere = window.localStorage.getItem(key) === "1";
+    } catch {}
+    if (seenHere) {
+      onFinish(); // account flag was missing — repair it, don't show the tour
+      return;
     }
-  }, [autoStart]);
+    try {
+      window.localStorage.setItem(key, "1");
+    } catch {}
+    onFinish();
+    setStepIndex(0);
+    setActive(true);
+  }, [autoStart, userId, onFinish]);
 
   const step = steps[stepIndex];
 

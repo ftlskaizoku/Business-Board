@@ -113,8 +113,34 @@ export default function VenteClient({
     })
     .filter((l): l is { product: Product; qty: number } => !!l);
 
+  const cartRows = (
+    <>
+              {cartLines.length === 0 && <p className="text-sm text-muted text-center py-8">Panier vide.</p>}
+              {cartLines.map(({ product, qty }) => (
+                <div key={product.id} className="py-3.5 border-b border-line last:border-0">
+                  <div className="flex items-baseline justify-between gap-3 min-w-0">
+                    <p className="text-sm font-medium truncate">{product.name}</p>
+                    <p className="font-mono text-sm shrink-0">{fmt(product.price * qty, currency)}</p>
+                  </div>
+                  <div className="flex items-center justify-between mt-2 gap-3">
+                    <p className="text-xs text-muted font-mono">
+                      {fmt(product.price, currency)} × {qty}
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <Stepper qty={qty} onChange={(q) => setQty(product.id, q)} size="sm" />
+                      <button onClick={() => setQty(product.id, 0)} className="text-red text-xs" aria-label="Retirer du panier">
+                        Retirer
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+    </>
+  );
+
   return (
-    <div className={itemCount > 0 ? "pb-24" : ""} data-tour="vente-grid">
+    <div className={`lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-8 lg:items-start ${itemCount > 0 ? "pb-24 lg:pb-0" : ""}`} data-tour="vente-grid">
+      <div className="min-w-0">
       {(products.length > 6 || categories.length > 1) && (
         <div className="flex gap-2 mb-3">
           <div className="relative flex-1 min-w-0">
@@ -136,7 +162,7 @@ export default function VenteClient({
               type="button"
               onClick={() => setFilterOpen(true)}
               aria-label="Filtrer par catégorie"
-              className={`relative shrink-0 w-11 h-11 rounded-[14px] border flex items-center justify-center transition-colors ${
+              className={`lg:hidden relative shrink-0 w-11 h-11 rounded-[14px] border flex items-center justify-center transition-colors ${
                 category ? "bg-ochre border-ochre" : "bg-card border-line text-ink"
               }`}
             >
@@ -152,7 +178,7 @@ export default function VenteClient({
         <button
           type="button"
           onClick={() => setCategory(null)}
-          className="row-in mb-3 inline-flex items-center gap-1.5 h-8 pl-3 pr-2.5 rounded-full bg-ochre-soft text-ochre text-xs font-medium max-w-full"
+          className="lg:hidden row-in mb-3 inline-flex items-center gap-1.5 h-8 pl-3 pr-2.5 rounded-full bg-ochre-soft text-ochre text-xs font-medium max-w-full"
         >
           <span className="truncate">{category}</span>
           <span aria-hidden>✕</span>
@@ -160,14 +186,33 @@ export default function VenteClient({
         </button>
       )}
 
+      {categories.length > 1 && (
+        <div className="hidden lg:flex flex-wrap gap-2 mb-4">
+          {[null, ...categories].map((c) => (
+            <button
+              key={c ?? "all"}
+              type="button"
+              aria-pressed={category === c}
+              onClick={() => setCategory(c)}
+              className={`h-9 px-3.5 rounded-full text-[13px] font-medium border transition-colors ${
+                category === c ? "bg-ink text-cream border-ink" : "bg-card text-muted border-line hover:text-ink"
+              }`}
+            >
+              {c ?? "Tout"}
+            </button>
+          ))}
+        </div>
+      )}
+
       {groups.length === 0 && <p className="text-sm text-muted text-center py-10">Aucun produit ne correspond.</p>}
 
+      <div className="lg:grid lg:grid-cols-2 2xl:grid-cols-3 lg:gap-2.5">
       {groups.map((g) => (
-        <section key={g.category} className="mb-5">
+        <section key={g.category} className="mb-5 lg:mb-0 lg:contents">
           {(categories.length > 1 && !category) && (
-            <h2 className="text-xs font-medium uppercase tracking-wider text-muted mb-2 px-1">{g.category}</h2>
+            <h2 className="lg:hidden text-xs font-medium uppercase tracking-wider text-muted mb-2 px-1">{g.category}</h2>
           )}
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-2 sm:grid-cols-2 lg:contents">
             {g.items.map((p) => {
               const inCart = cart[p.id] || 0;
               const soldOut = trackStock && p.stock <= 0;
@@ -184,6 +229,9 @@ export default function VenteClient({
                     disabled={soldOut}
                     className="flex-1 min-w-0 text-left py-0.5"
                   >
+                    {categories.length > 1 && (
+                      <span className="hidden lg:block text-[10px] uppercase tracking-wider text-muted mb-0.5 truncate">{p.category}</span>
+                    )}
                     <span className="block text-sm font-medium leading-snug line-clamp-2 break-words">{p.name}</span>
                     <span className="block font-mono text-xs text-muted mt-0.5 truncate">
                       {fmt(p.price, currency)}
@@ -206,7 +254,17 @@ export default function VenteClient({
                       +
                     </button>
                   ) : (
-                    <Stepper qty={inCart} onChange={(q) => setQty(p.id, q)} size="sm" />
+                    <>
+                      <span className="lg:hidden"><Stepper qty={inCart} onChange={(q) => setQty(p.id, q)} size="sm" /></span>
+                      <button
+                        type="button"
+                        onClick={() => setQty(p.id, inCart + 1)}
+                        aria-label={`Ajouter un autre ${p.name}`}
+                        className="hidden lg:flex shrink-0 h-10 min-w-10 px-2.5 rounded-full bg-ochre font-mono text-sm font-medium items-center justify-center"
+                      >
+                        ×{inCart}
+                      </button>
+                    </>
                   )}
                 </div>
               );
@@ -214,6 +272,34 @@ export default function VenteClient({
           </div>
         </section>
       ))}
+      </div>
+      </div>
+
+      {/* Desktop: the basket stays in view next to the products. */}
+      <aside className="hidden lg:block sticky top-8" aria-label="Panier">
+        <div className="bg-card border border-line rounded-[20px] card-surface overflow-hidden">
+          <div className="px-5 py-4 flex items-center justify-between border-b border-line">
+            <p className="font-display font-semibold text-lg">Panier</p>
+            <span className="font-mono text-xs text-muted">{itemCount} article{itemCount > 1 ? "s" : ""}</span>
+          </div>
+          <div className="px-5 max-h-[52vh] overflow-y-auto">
+            {cartLines.length === 0 ? (
+              <p className="text-sm text-muted text-center py-10 [text-wrap:balance]">Touchez un produit pour l&apos;ajouter à la vente.</p>
+            ) : (
+              cartRows
+            )}
+          </div>
+          <div className="px-5 py-4 border-t border-line">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm text-muted">Total</span>
+              <span className="font-mono text-xl font-medium">{fmt(total, currency)}</span>
+            </div>
+            <button onClick={handleCheckout} disabled={pending || itemCount === 0} className={primaryBtn}>
+              {pending ? "Enregistrement…" : "Encaisser"}
+            </button>
+          </div>
+        </div>
+      </aside>
 
       {filterOpen && (
         <div className="sheet-root fixed inset-0 z-30 flex flex-col justify-end" role="dialog" aria-modal="true" aria-label="Filtrer par catégorie">
@@ -272,7 +358,7 @@ export default function VenteClient({
       )}
 
       {itemCount > 0 && !drawerOpen && (
-        <div className="fixed inset-x-0 lg:left-64 z-10 px-4 pointer-events-none" style={{ bottom: `calc(${NAV_OFFSET} + 0.625rem)` }}>
+        <div className="lg:hidden fixed inset-x-0 z-10 px-4 pointer-events-none" style={{ bottom: `calc(${NAV_OFFSET} + 0.625rem)` }}>
           <div className="row-in pointer-events-auto max-w-2xl mx-auto bg-ochre rounded-2xl flex items-stretch overflow-hidden shadow-[0_12px_28px_-10px_var(--color-ochre)]">
             <button onClick={() => setDrawerOpen(true)} className="px-4 py-3 text-left border-r border-white/25 min-w-0">
               <span className="block text-[10px] uppercase tracking-widest opacity-80">Panier</span>
@@ -292,7 +378,7 @@ export default function VenteClient({
       )}
 
       {drawerOpen && (
-        <div className="sheet-root fixed inset-0 z-30 flex flex-col justify-end" role="dialog" aria-modal="true" aria-label="Panier">
+        <div className="lg:hidden sheet-root fixed inset-0 z-30 flex flex-col justify-end" role="dialog" aria-modal="true" aria-label="Panier">
           <div className="absolute inset-0 bg-ink/40" onClick={() => setDrawerOpen(false)} />
           <div className="sheet-up sheet-panel relative bg-card rounded-t-3xl border-t border-line max-h-[80vh] flex flex-col max-w-2xl w-full mx-auto">
             <div className="pt-2.5 flex justify-center">
@@ -306,26 +392,7 @@ export default function VenteClient({
             </div>
 
             <div className="overflow-y-auto px-5 flex-1 border-t border-line">
-              {cartLines.length === 0 && <p className="text-sm text-muted text-center py-8">Panier vide.</p>}
-              {cartLines.map(({ product, qty }) => (
-                <div key={product.id} className="py-3.5 border-b border-line last:border-0">
-                  <div className="flex items-baseline justify-between gap-3 min-w-0">
-                    <p className="text-sm font-medium truncate">{product.name}</p>
-                    <p className="font-mono text-sm shrink-0">{fmt(product.price * qty, currency)}</p>
-                  </div>
-                  <div className="flex items-center justify-between mt-2 gap-3">
-                    <p className="text-xs text-muted font-mono">
-                      {fmt(product.price, currency)} × {qty}
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <Stepper qty={qty} onChange={(q) => setQty(product.id, q)} size="sm" />
-                      <button onClick={() => setQty(product.id, 0)} className="text-red text-xs" aria-label="Retirer du panier">
-                        Retirer
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+              {cartRows}
             </div>
 
             <div className="px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-line">
